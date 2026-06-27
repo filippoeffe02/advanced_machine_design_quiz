@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AMD Quiz">
+<meta name="theme-color" content="#0f1419">
+<title>Advanced Machine Design — WT2 Theory Trainer</title>
+<style>
+:root{
+  --bg:#0f1419; --panel:#1a212b; --panel2:#222b38; --line:#2f3a49;
+  --txt:#e8edf3; --muted:#9aa7b6; --accent:#4ea1ff; --accent2:#2f7fd6;
+  --good:#3ecf8e; --good-bg:#13322a; --bad:#ff6b6b; --bad-bg:#3a1c1f;
+  --warn:#ffc861; --warn-bg:#3a3214; --chip:#26303d;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:linear-gradient(160deg,#0f1419,#121a24);color:var(--txt);line-height:1.5;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;}
+.wrap{max-width:820px;margin:0 auto;padding:24px 18px 80px;
+  padding-left:max(18px,env(safe-area-inset-left));padding-right:max(18px,env(safe-area-inset-right));}
+h1{font-size:23px;margin:0 0 4px;font-weight:700;letter-spacing:.2px;}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:22px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px;}
+.btn{background:var(--accent);color:#06121f;border:none;border-radius:9px;padding:12px 20px;
+  font-size:15px;font-weight:650;cursor:pointer;transition:.15s;}
+.btn:hover{background:#6cb3ff;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn.sec{background:var(--panel2);color:var(--txt);border:1px solid var(--line);}
+.btn.sec:hover{background:var(--chip);}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+label.fld{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
+select,input[type=number]{background:var(--panel2);color:var(--txt);border:1px solid var(--line);
+  border-radius:8px;padding:9px 11px;font-size:14px;width:100%;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;}
+.stat .box{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;flex:1;min-width:120px;}
+.stat .n{font-size:22px;font-weight:700;}
+.stat .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+/* quiz */
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;}
+.timer{font-variant-numeric:tabular-nums;font-size:20px;font-weight:700;background:var(--panel2);
+  border:1px solid var(--line);border-radius:9px;padding:7px 14px;}
+.timer.warn{color:var(--warn);border-color:var(--warn);}
+.timer.crit{color:var(--bad);border-color:var(--bad);animation:pulse 1s infinite;}
+@keyframes pulse{50%{opacity:.55}}
+.progress{height:6px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-bottom:18px;}
+.progress > i{display:block;height:100%;background:var(--accent);transition:width .3s;}
+.qmeta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.chip{font-size:11px;background:var(--chip);color:var(--muted);border:1px solid var(--line);
+  border-radius:20px;padding:3px 10px;font-weight:600;}
+.chip.topic{color:var(--accent);}
+.chip.recent{color:var(--good);border-color:#2c5e4c;}
+.chip.old{color:var(--warn);border-color:#5e521f;}
+.qtext{font-size:16.5px;font-weight:600;margin:6px 0 16px;}
+.opt{display:flex;gap:11px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);
+  border-radius:10px;padding:13px 15px;margin-bottom:9px;cursor:pointer;transition:.12s;}
+.opt:hover{border-color:var(--accent2);background:#26313f;}
+.opt.sel{border-color:var(--accent);background:#1e2d40;}
+.opt .mk{flex:0 0 22px;height:22px;border-radius:50%;border:2px solid var(--muted);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:1px;}
+.opt.sel .mk{border-color:var(--accent);background:var(--accent);color:#06121f;}
+.opt .ot{font-size:14.5px;}
+.opt.correct{border-color:var(--good);background:var(--good-bg);}
+.opt.correct .mk{border-color:var(--good);background:var(--good);color:#06121f;}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg);}
+.opt.wrong .mk{border-color:var(--bad);background:var(--bad);color:#fff;}
+.opt.disabled{cursor:default;}
+.nav{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
+/* review */
+.exp{background:var(--panel2);border-left:3px solid var(--accent);border-radius:8px;
+  padding:12px 15px;margin-top:12px;font-size:14px;}
+.exp .lab{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);font-weight:700;margin-bottom:4px;}
+.exp.theory{border-left-color:var(--muted);}
+.exp.theory .lab{color:var(--muted);}
+.flagbox{background:var(--warn-bg);border:1px solid #5e521f;border-radius:8px;padding:10px 13px;
+  margin-top:12px;font-size:13px;color:#f0d894;}
+.rev-q{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px;}
+.rev-h{display:flex;gap:9px;align-items:center;margin-bottom:8px;font-weight:600;}
+.badge{font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;}
+.badge.ok{background:var(--good-bg);color:var(--good);}
+.badge.no{background:var(--bad-bg);color:var(--bad);}
+.badge.skip{background:var(--warn-bg);color:var(--warn);}
+.muted{color:var(--muted);}
+.small{font-size:12.5px;}
+.hide{display:none;}
+.scorebig{font-size:46px;font-weight:800;text-align:center;line-height:1;}
+.scoresub{text-align:center;color:var(--muted);margin-top:6px;}
+.gradebar{height:12px;border-radius:8px;background:var(--panel2);overflow:hidden;margin:18px 0;}
+.gradebar > i{display:block;height:100%;}
+details summary{cursor:pointer;color:var(--accent);font-size:13.5px;margin-top:8px;}
+.foot{color:var(--muted);font-size:12px;text-align:center;margin-top:30px;}
+kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px;}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:14px;}
+/* ---- phone layout ---- */
+@media (max-width:560px){
+  .wrap{padding:16px 12px 72px;}
+  h1{font-size:20px;}
+  .sub{font-size:13px;}
+  .card{padding:15px;border-radius:12px;margin-bottom:14px;}
+  .grid2{grid-template-columns:1fr;gap:14px;}
+  .btn{padding:13px 18px;font-size:15px;}
+  #startBtn,#weakBtn{width:100%;}
+  .row > .btn{flex:1 1 auto;}
+  .topbar .btn{padding:10px 14px;}
+  .nav{flex-direction:column-reverse;align-items:stretch;gap:10px;}
+  .nav .row{display:flex;gap:10px;}
+  .nav .row .btn{flex:1;}
+  #prevBtn{width:100%;}
+  .opt{padding:14px 14px;}
+  .opt .mk{flex-basis:24px;height:24px;}
+  .qtext{font-size:16px;}
+  .stat{gap:10px;}
+  .stat .box{min-width:0;flex:1 1 42%;padding:10px;}
+  .scorebig{font-size:38px;}
+  select,input[type=number]{font-size:16px;padding:11px;}  /* 16px stops iOS auto-zoom on focus */
+  .timer{font-size:18px;padding:8px 12px;}
+  #results .row{flex-direction:column;align-items:stretch;}
+  #results .row .btn{width:100%;}
+  .foot{font-size:11px;}
+}
+@media (hover:none){ .foot kbd{display:none;} }  /* hide keyboard hints on touch devices */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Advanced Machine Design — WT2 Theory Trainer</h1>
+  <div class="sub">Multiple-choice theory practice built from Politecnico di Milano exams (Prof. Giglio), 2022–2026. Scoring: <b>+1</b> correct, <b>−0.5</b> wrong or blank — exactly like the real Written Test 2.</div>
+
+  <!-- HOME -->
+  <div id="home">
+    <div class="card">
+      <div class="grid2">
+        <div>
+          <label class="fld">Number of questions</label>
+          <select id="numQ">
+            <option value="8" selected>8 — exam mode</option>
+            <option value="15">15 — long session</option>
+            <option value="25">25 — marathon</option>
+            <option value="0">All available</option>
+          </select>
+        </div>
+        <div>
+          <label class="fld">Timer (minutes, 0 = no limit / stopwatch)</label>
+          <input type="number" id="mins" min="0" max="120" value="16">
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <label class="fld">Topic focus</label>
+        <select id="topicSel"></select>
+      </div>
+      <div style="margin-top:16px" class="row">
+        <label class="row small" style="gap:7px"><input type="checkbox" id="recentOnly"> Recent exams only (2024–2026)</label>
+        <label class="row small" style="gap:7px"><input type="checkbox" id="weighted" checked> Weight by recency & frequency</label>
+      </div>
+      <div style="margin-top:20px" class="row">
+        <button class="btn" id="startBtn">Start exam ▶</button>
+        <button class="btn sec" id="weakBtn">🎯 Practice weak spots</button>
+      </div>
+      <div class="stat" id="bankStat"></div>
+    </div>
+    <div class="card" id="histCard"></div>
+
+    <div class="card small">
+      <b style="color:var(--txt)">Move progress between devices</b>
+      <div class="muted" style="margin:6px 0 10px">History &amp; weak spots are saved <b>per device</b> (they don't sync automatically). Export a code here, then Import it on your other device.</div>
+      <div class="row">
+        <button class="btn sec" id="exportBtn">⤓ Export code</button>
+        <button class="btn sec" id="importBtn">⤒ Import code</button>
+      </div>
+      <textarea id="syncBox" class="hide" spellcheck="false" placeholder="Paste your exported code here…"
+        style="width:100%;margin-top:10px;height:84px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;font-family:monospace;resize:vertical"></textarea>
+      <div id="syncMsg" class="muted small" style="margin-top:6px"></div>
+    </div>
+
+    <div class="card small muted">
+      <b style="color:var(--txt)">How selection works.</b> Every run draws a <b>random</b> set from the available pool. With weighting on, topics from the most recent exams (2024–2026) and frequently-repeated questions are drawn more often (recent ≈86%, older ≈14%); turn the checkbox off for a pure uniform random draw. The "crocette" theory section (WT2) only appears in exams from <b>2022 onward</b>, so older years aren't in the bank. Your scores and mistakes are saved <b>in this browser only</b>.
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" class="hide">
+    <div class="topbar">
+      <button class="btn sec" id="quitBtn">✕ Quit</button>
+      <div class="timer" id="timer">--:--</div>
+    </div>
+    <div class="progress"><i id="prog"></i></div>
+    <div class="card">
+      <div class="qmeta" id="qmeta"></div>
+      <div class="qtext" id="qtext"></div>
+      <div id="opts"></div>
+      <div class="nav">
+        <button class="btn sec" id="prevBtn">← Prev</button>
+        <div class="row">
+          <button class="btn sec" id="skipBtn">Skip</button>
+          <button class="btn" id="nextBtn">Next →</button>
+        </div>
+      </div>
+    </div>
+    <div class="muted small" id="qcount" style="text-align:center"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results" class="hide">
+    <div class="card">
+      <div class="scorebig" id="scoreNum"></div>
+      <div class="scoresub" id="scoreSub"></div>
+      <div class="gradebar"><i id="gradeFill"></i></div>
+      <div class="stat" id="resStat"></div>
+      <div style="margin-top:20px" class="row">
+        <button class="btn" id="againBtn">New exam</button>
+        <button class="btn sec" id="reviewWrongBtn">Review mistakes only</button>
+        <button class="btn sec" id="reviewAllBtn">Review all</button>
+      </div>
+    </div>
+    <div id="review"></div>
+  </div>
+
+  <div class="foot">Built from your exam archive · 2022–2026 · Keyboard: <kbd>1-4</kbd> select · <kbd>→</kbd> next</div>
+</div>
+
+<script>
+/* ============================ QUESTION BANK ============================ */
+/* correct = index (single answer). multi:true => correct is an array.    */
+const BANK = [
+/* ---------- DESIGN CRITERIA / PHILOSOPHY ---------- */
+{topic:"Design criteria",years:[2026],q:'According to the "Safe Life" design philosophy, a component must be retired from service:',
+ opts:["When a crack of a detectable size is found during inspection.","After a specific number of load cycles or operating hours, regardless of its condition.","When the redundancy of the structure is compromised by a failure of a sub-element.","When the residual strength falls below the limit load."],correct:1,
+ exp:"Safe-Life design assigns a finite service life (cycles/hours) computed with safety factors; the part is retired at that limit even if no damage is visible.",
+ theory:"Contrast: Damage-Tolerant retires on detected crack size at inspection; Fail-Safe relies on redundancy after a sub-element fails."},
+
+/* ---------- FORCE METHOD ---------- */
+{topic:"Force method",years:[2026,2025],q:"In the Force Method for statically indeterminate structures, the compatibility equations are written to:",
+ opts:["Ensure internal bending moments vanish at the hinges.","Enforce that displacements/rotations at the removed redundant constraints match the actual boundary conditions.","Minimize the total potential energy with respect to nodal displacements.","Calculate the plastic collapse load of the structure."],correct:1,
+ exp:"You remove the redundant constraints, apply the unknown redundant forces, and impose that the displacement/rotation at each removed constraint equals its real value (usually zero). That gives the missing equations.",
+ theory:"The force (flexibility) method solves for forces as unknowns; compatibility of displacements closes the system. The complementary displacement (stiffness) method minimizes potential energy instead."},
+
+/* ---------- FEM ---------- */
+{topic:"FEM",years:[2026],q:'In Finite Element Analysis, the strategy known as "h-adaptivity" improves accuracy by:',
+ opts:["Increasing the polynomial order of the shape functions.","Reducing the characteristic size of the elements (mesh refinement).","Using reduced integration to avoid shear locking.","Introducing viscous damping to stabilize the solution."],correct:1,
+ exp:"h-adaptivity refines the mesh: it shrinks element size h where the error is high. p-adaptivity is the alternative that raises the polynomial order p of the shape functions.",
+ theory:"Solution error scales with both h and p. h-refinement adds elements; p-refinement enriches each element.",flag:"Adaptivity wording (h/p) is a recent (2025–26) phrasing."},
+
+{topic:"FEM",years:[2025],q:"For first-order 8-node brick (hexahedral) elements, spurious hourglass zero-energy modes arise most commonly when integrated with:",
+ opts:["Full Gauss integration","Single-point (reduced) integration","Any scheme if the aspect ratio exceeds 5","None of the above"],correct:1,
+ exp:"Reduced (single-point) integration under-integrates the element, leaving deformation modes that produce zero strain energy — the 'hourglass' modes. Hourglass control or full integration suppresses them.",
+ theory:"Reduced integration is cheaper and avoids shear/volumetric locking, but needs stabilization against zero-energy modes."},
+
+{topic:"FEM",years:[2026],q:'In FEM, "shear locking" is a numerical artifact that primarily affects:',
+ opts:["Second-order triangular elements under thermal loads.","First-order fully integrated quadrilateral elements (Q4) subjected to bending-dominant loads.","Reduced-integration elements regardless of loading.","Truss elements with large aspect ratios."],correct:1,
+ exp:"Linear (Q4) fully-integrated elements cannot represent pure bending: they develop spurious shear strain, making them artificially stiff under bending. Reduced integration or higher-order elements cure it.",
+ theory:"Locking = over-stiff response. Shear locking → bending of linear quads; volumetric locking → near-incompressible materials."},
+
+{topic:"FEM",years:[2025],q:"Shear locking in long, slender first-order quadrilateral elements is usually mitigated by:",
+ opts:["Full (Gauss) integration","Hourglass control only","Using second-order elements","Reducing Young's modulus"],correct:2,
+ exp:"Second-order (quadratic) elements can represent the strain gradient of bending, so they don't lock. Reduced integration is the other common fix.",
+ theory:"Higher-order shape functions capture bending curvature; linear ones cannot, hence locking."},
+
+{topic:"FEM",years:[2026],q:"In FEM, the completeness requirement for shape functions means that:",
+ opts:["The shape functions must be infinitely differentiable across element boundaries","The shape functions must be able to represent rigid body motions and constant strain states within the element","Every node must be shared by at least two elements","The element must have an aspect ratio close to unity"],correct:1,
+ exp:"Completeness requires the element to reproduce rigid-body motion (zero strain) and constant-strain states. Without it the patch test fails and the solution won't converge.",
+ theory:"Convergence needs completeness + compatibility (inter-element continuity)."},
+
+{topic:"FEM",years:[2025],q:"In FEM, a structure can be modelled as a plane (2D) problem only if:",
+ opts:["Forces act in the out-of-plane directions","The thickness is constant, independently from the direction of the external loads","Forces act in the in-plane directions","None of the above"],correct:2,
+ exp:"Plane stress / plane strain idealizations require the loads to lie in the plane of the model; out-of-plane loading breaks the 2D assumption.",
+ theory:"Plane stress: thin body, in-plane loads, σ_z≈0. Plane strain: thick/constrained body, ε_z≈0. Both need in-plane loading."},
+
+{topic:"FEM",years:[2023],q:"In FEM, the isoparametric formulation is required to:",
+ opts:["Generate elements with an arbitrary shape","Generate elements with higher accuracy","Avoid the shear locking","Implement quadratic shape functions"],correct:0,
+ exp:"Isoparametric mapping uses the same shape functions for geometry and displacement, letting elements take arbitrary (distorted/curved) shapes via a reference element + Jacobian.",
+ theory:"Geometry and field share interpolation → maps a regular parent element onto irregular real geometry."},
+
+{topic:"FEM",years:[2023],q:"How many degrees of freedom has a 2-node beam element with linear formulation in 3D space?",
+ opts:["6","8","12","18"],correct:2,
+ exp:"Each node in 3D has 6 DOF (3 translations + 3 rotations). Two nodes → 12 DOF.",
+ theory:"Beam/frame element in 3D: 6 DOF per node; truss element: 3 DOF per node (translations only)."},
+
+{topic:"FEM",years:[2022],q:"Regarding FEM, select the CORRECT sentence:",
+ opts:["For a given problem, FEM results always have the same accuracy as the analytical solution","The computed stresses are more accurate at the nodes than elsewhere","The external load is transformed into equivalent nodal loads","Shape functions describe the stress field within the element as a function of nodal displacements (directly)"],correct:2,
+ exp:"FEM converts distributed/external loads into statically-equivalent nodal forces. Stresses are actually most accurate at the integration (Gauss) points, not the nodes; shape functions interpolate displacements (stresses come from their derivatives).",
+ theory:"Nodal equivalent loads + shape-function interpolation of displacements are the backbone of the displacement FEM."},
+
+{topic:"FEM",years:[2022],q:"When preparing a FEM model, the correct meshing approach is:",
+ opts:["Use few elements to get results quickly","Tune and refine the mesh size until results converge to the required precision","Linear elements always handle high-stress-gradient regions without fine mesh","Solid elements are always the best choice"],correct:1,
+ exp:"Mesh density must be increased (especially at stress concentrations) until the result stops changing — a convergence study. Solid elements aren't always best; the right element type depends on the geometry.",
+ theory:"Convergence/mesh-independence study is mandatory for trustworthy stress results."},
+
+{topic:"FEM",years:[2022],q:"A bridge truss whose members can be welded together is most efficiently modelled with:",
+ opts:["Bar/Truss elements","Beam elements","Shell elements","Solid elements"],correct:[0,1],multi:true,
+ exp:"Slender connected bars carrying mainly axial (and possibly bending) loads are well represented by bar/truss or beam elements — far cheaper than shells or solids. Both are acceptable here.",
+ theory:"Truss = axial only; beam = axial + bending/torsion. Use 1D elements for slender frameworks."},
+
+/* ---------- AXISYMMETRIC ---------- */
+{topic:"Axisymmetric",years:[2026],q:"In the analytical solution for a SOLID rotating disk, the constant C2 in the general stress equation must be set to zero because:",
+ opts:["The outer edge is stress-free.","The radial displacement at the outer edge is zero.","The radial and hoop stresses must remain finite at the centre.","The centrifugal force is zero at the centre."],correct:2,
+ exp:"The general solution contains a 1/r² term (constant C2). At r→0 it would blow up, so for a solid disk (no hole) C2=0 keeps stresses finite at the centre.",
+ theory:"For a solid disk σ_r=σ_θ at the centre. For an annular disk the inner radius lets C2≠0, giving a stress peak at the bore."},
+
+{topic:"Axisymmetric",years:[2026],q:"For a rotating hollow cylinder/disk (no internal/external pressure), the maximum tangential (hoop) stress occurs:",
+ opts:["At the outer radius.","At the inner radius.","At the geometric centre of the thickness.","It is constant throughout."],correct:1,
+ exp:"Centrifugal loading of an annular disk produces the largest hoop stress at the inner radius (bore). A small hole roughly doubles the central solid-disk stress.",
+ theory:"Hole in a rotating disk acts like a stress raiser: σ_θ,max at the bore."},
+
+{topic:"Axisymmetric",years:[2026],q:"In a rotating hollow (annular) disk, the radial stress due to centrifugal loading:",
+ opts:["Is maximum at the inner radius and zero at the outer radius","Is maximum at the outer radius","Vanishes at both the inner and outer radii","Is negative everywhere"],correct:2,
+ exp:"The free inner and outer edges carry no radial traction, so σ_r=0 at both radii and peaks somewhere in between.",
+ theory:"Radial stress is bounded by stress-free boundaries; hoop stress is the critical one and peaks at the bore."},
+
+{topic:"Axisymmetric",years:[2025],q:"In a SOLID rotating cylinder with no other loads applied:",
+ opts:["Zero radial stress and positive axial stress on the outer surface","Different radial and circumferential stresses at the centre","Zero radial stress and negative axial stress on the outer surface","Equal radial, circumferential and axial stresses at the centre"],correct:2,
+ exp:"The outer surface is free, so σ_r=0 there; the axial stress required for plane-strain/equilibrium is compressive (negative) at the outer fibre.",
+ theory:"At the centre of a solid rotating body σ_r=σ_θ; the axial stress distribution balances the centrifugal field."},
+
+{topic:"Axisymmetric",years:[2025,2024,2023],q:"For axisymmetric problems (thick cylinders), select the CORRECT statement:",
+ opts:["Grammel's method uses compatibility instead of equilibrium","Mariotte (thin-wall) formula is valid only for thick cylinders","The closed-form solution for circumferential stress under internal pressure is valid for both thin AND thick cylinders","The axisymmetric elastic solution is valid even with plastic zones in the material"],correct:2,
+ exp:"The Lamé/axisymmetric solution for σ_θ under internal pressure holds for any wall thickness. Mariotte is only the thin-wall approximation; the elastic solution is not valid once plasticity appears.",
+ theory:"Thin-wall (Mariotte): σ_θ≈pD/2t (uniform). Thick-wall (Lamé): σ_θ varies through thickness, max at the bore.",flag:"High-frequency topic — appeared 2023, 2024, 2025."},
+
+{topic:"Axisymmetric",years:[2023],q:"Considering Grammel's method for axisymmetric components, the CORRECT statement is:",
+ opts:["It allows generic non-axisymmetric loads","It discretizes the component into multiple domains linked through equilibrium AND compatibility equations","It is valid only with both centrifugal force and pressure, allowing local plasticization","None of the others"],correct:1,
+ exp:"Grammel is a numerical/semi-analytical scheme: it splits the axisymmetric body into rings/domains and connects them imposing equilibrium and compatibility at the interfaces.",
+ theory:"It handles variable thickness/loads in axisymmetric elastic problems (disks/cylinders) by domain assembly.",flag:"Grammel/weld-era topic (2022–23), not seen in the most recent WT2 exams."},
+
+{topic:"Axisymmetric",years:[2022],q:"Considering Grammel's method, select the WRONG statement:",
+ opts:["It provides the correct stress gradient at the interface between two domains because the formulation includes equilibrium of the stress components","It discretizes the axisymmetric component into multiple domains linked by equilibrium and compatibility","It can account for a centrifugal load due to rotation","Its formulation can account for shrink-fit effects"],correct:0,
+ exp:"The WRONG sentence is the first: Grammel enforces equilibrium and compatibility between domains but does not guarantee a perfectly correct stress gradient across the interface — it is an approximate domain method.",
+ theory:"Grammel handles rotation and shrink-fit; the interface stress matching is approximate.",flag:"Grammel topic — 2022–23 emphasis."},
+
+/* ---------- PLASTICITY ---------- */
+{topic:"Plasticity",years:[2026,2025,2026],q:"According to Neuber's rule, during local yielding at a notch the product of the stress and strain concentration factors equals:",
+ opts:["Kt²","Ks (strain concentration factor)","Kt","√Kt"],correct:0,
+ exp:"Neuber's rule: Kσ·Kε = Kt². The theoretical (elastic) factor Kt is the geometric mean of the actual stress and strain concentration factors, so Kt = √(Kσ·Kε).",
+ theory:"Combined with the cyclic σ–ε curve, Neuber gives local elastic-plastic stress and strain at the notch root from the nominal (elastic) Kt.",flag:"Very frequent — appears almost every year."},
+
+{topic:"Plasticity",years:[2025],q:"Using Neuber's rule to estimate the stress-strain state with plasticity, the CORRECT statement is:",
+ opts:["Neuber's rule applies only if the material is linear elastic","Neuber + σ–ε curve give stress/strain only with total plasticization","Neuber + σ–ε curve give the stress/strain state during loading AND unloading with local plasticization","Neuber's rule computes the theoretical notch factor in presence of plasticization"],correct:2,
+ exp:"Neuber's rule, combined with the material σ–ε curve, yields the local elastic-plastic stress and strain at a notch during both loading and unloading, even for localized (not total) yielding.",
+ theory:"It is the core of the local strain approach to notch fatigue (e.g. with Masing/hysteresis behaviour on unloading)."},
+
+{topic:"Plasticity",years:[2025],q:"In plastic bending of a rectangular section made of elastic-perfectly-plastic material, when the cross-section is fully yielded the stress distribution becomes:",
+ opts:["Uniform positive across the height","Parabolic with maximum at the neutral axis","Uniform tension and compression in each half","Triangular with zero stress at the neutral axis"],correct:2,
+ exp:"At full plasticization the stress is +σy over the tension half and −σy over the compression half (two rectangular blocks) with a sharp jump at the neutral axis.",
+ theory:"Initial yielding: triangular (linear) stress. Full plasticization: two uniform ±σy blocks."},
+
+{topic:"Plasticity",years:[2026,2024],q:"Regarding bending in the elasto-plastic regime, the CORRECT statement is:",
+ opts:["For ductile materials, the moment of total plasticization equals the moment of first yielding","For a circular section the fully-plastic moment is 1.5× the first-yield moment","For a rectangular section the strain at total plasticization is 1.5× the first-yield strain","For an intermediate moment (between first yield and full plasticization) the stress on the neutral axis is zero"],correct:3,
+ exp:"During partial yielding an elastic core remains around the neutral axis, where stress is still zero. The shape factor (Mp/My) is 1.5 for a rectangle (≈1.7 for a circle), and it relates moments, not strains.",
+ theory:"Rectangular shape factor = Mp/My = 1.5; circular ≈ 1.698. The neutral axis stays elastic (σ=0) until full plasticization."},
+
+{topic:"Plasticity",years:[2024],q:"Considering the stress state generated by a bending moment, the CORRECT statement is:",
+ opts:["As soon as yielding is reached locally, the whole section yields","Plastic collapse is verified considering only the notch effect","If the component enters the plastic region, on unloading it recovers all deformation","The fully-plastic bending moment is 1.5× the first-yield moment for a rectangular section"],correct:3,
+ exp:"Yielding starts at the outer fibre and spreads inward; the section is not instantly fully plastic. Unloading from plasticity leaves permanent set and residual stresses. The rectangular shape factor is 1.5.",
+ theory:"Mp = 1.5·My (rectangle). Notch factor Kt is not used for ductile plastic collapse."},
+
+{topic:"Plasticity",years:[2026],q:"A rectangular beam of elastic-perfectly-plastic material is bent to partial yielding, then fully unloaded. The residual stress at the outer fibres (originally in tension) is typically:",
+ opts:["Zero","Tensile","Compressive","Equal to the yield strength"],correct:2,
+ exp:"Unloading is elastic and linear. Subtracting the elastic 'spring-back' from the partly-plastic loaded state leaves compressive residual stress at the outer fibres that had yielded in tension.",
+ theory:"This beneficial compressive residual stress is the basis of overstraining/auto-frettage and shot-peening."},
+
+{topic:"Plasticity",years:[2025],q:"For an elastic-plastic plate with a central hole in axial tension, the fully-plastic load is P0. What happens beyond P0?",
+ opts:["A crack forms immediately","Additional load can still be carried elastically","No further load increase is possible","The plate springs back"],correct:2,
+ exp:"P0 is the limit (collapse) load of the net section: once the whole net ligament yields, the perfectly-plastic material cannot carry any extra load.",
+ theory:"Limit load = net-section area × σy (perfectly-plastic). Hardening would allow a small further increase."},
+
+{topic:"Stress concentration",years:[2025],q:"For a very small circular hole in an infinite plate (uniaxial tension), the theoretical stress concentration factor Kt asymptotically approaches:",
+ opts:["2","1.12","3","4"],correct:2,
+ exp:"The classic Kirsch solution gives Kt=3 for a small circular hole in an infinite plate under uniaxial tension.",
+ theory:"Kt=3 (uniaxial tension). Under equibiaxial tension Kt=2; an elliptical hole gives Kt=1+2(a/b)."},
+
+{topic:"Stress concentration",years:[2022],q:"A plate with a hole is loaded in PURE SHEAR τ=100 MPa. The maximum stress at the most stressed point is:",
+ opts:["100 MPa","300 MPa","400 MPa","None of the others"],correct:2,
+ exp:"Pure shear = equibiaxial tension+compression at ±45°. Each principal stress (±τ) is amplified by Kt=3, and they superpose at the hole edge to ±4τ → 400 MPa.",
+ theory:"Hole in shear: σ_max = 4τ (because 3·τ + 3·τ from the two perpendicular principal stresses of opposite sign)."},
+
+/* ---------- FATIGUE ---------- */
+{topic:"Fatigue",years:[2025],q:"For steels exhibiting a fatigue limit, the S-N (Wöhler) curve typically shows a horizontal asymptote after about:",
+ opts:["10²–10³ cycles","10⁴–10⁵ cycles","10⁶–10⁷ cycles","10⁸–10⁹ cycles"],correct:2,
+ exp:"Carbon steels develop the endurance (fatigue) limit knee around 10⁶–10⁷ cycles; below that stress amplitude they nominally last indefinitely.",
+ theory:"Many non-ferrous alloys (Al) show no true fatigue limit; a conventional limit is set at e.g. 10⁷–10⁸ cycles."},
+
+{topic:"Fatigue",years:[2025,2025],q:"Which Goodman relation links stress amplitude Sa and mean stress Sm (Sf = fatigue limit, Su = UTS)?",
+ opts:["Sa/Sf + Sm/Su = 0","Sa/Sf + Sm/Su = 1","Sa/Sf + Sm/Sy = 1","Sa/Sy + Sm/Su = 1"],correct:1,
+ exp:"The modified Goodman line is Sa/Sf + Sm/Su = 1: allowable amplitude drops linearly to zero as the mean stress approaches the UTS.",
+ theory:"Goodman uses Su; Soderberg uses Sy (more conservative); Gerber uses a parabola with Su."},
+
+{topic:"Fatigue",years:[2025],q:"In the Goodman relation Sa/Sf + Sm/Su = 1, the property Su represents:",
+ opts:["Yield strength","Ultimate tensile strength","Fatigue limit","None of the above"],correct:1,
+ exp:"Su is the ultimate tensile strength — the mean-stress axis intercept of the Goodman line.",
+ theory:"Sf intercepts the amplitude axis (zero mean), Su intercepts the mean-stress axis (zero amplitude)."},
+
+{topic:"Fatigue",years:[2022],q:"The mean stress produces which effect on the fatigue limit?",
+ opts:["A positive τ mean stress strongly reduces the fatigue limit","A reduction of the fatigue limit occurs for positive σ mean stresses","Both positive and negative mean stresses reduce the fatigue limit","Mean stress can always be neglected conservatively"],correct:1,
+ exp:"A positive (tensile) normal mean stress lowers the allowable amplitude. A compressive mean stress is beneficial; a mean shear stress has little effect until large.",
+ theory:"Goodman/Gerber/Soderberg quantify the tensile-mean-stress penalty."},
+
+{topic:"Fatigue",years:[2026,2025],q:"The fatigue notch factor Kf is generally LOWER than the theoretical stress concentration factor Kt because:",
+ opts:["Only the peak notch stress governs fatigue failure","Fatigue damage depends on a finite process volume (average stress over a material grain/region) around the notch, not just the peak stress","The material at the notch root is always fully elastic","Kf increases without bound as the notch radius decreases"],correct:1,
+ exp:"Fatigue strength reflects the stress averaged over a small finite volume of material, so the sharp elastic peak (Kt) is not fully felt — hence Kf ≤ Kt (notch-sensitivity q = (Kf−1)/(Kt−1)).",
+ theory:"Sharper notches (small radius) make Kt large but Kf saturates: small notches are less fatigue-damaging than Kt suggests."},
+
+{topic:"Fatigue",years:[2024],q:"The fatigue notch factor Kf is defined as:",
+ opts:["Fatigue strength of notched specimens / fatigue strength of un-notched specimens","Fatigue strength of un-notched specimens / fatigue strength of notched specimens","Maximum stress at the notch / nominal stress","None of the others"],correct:1,
+ exp:"Kf = (fatigue limit of smooth specimen)/(fatigue limit of notched specimen) ≥ 1. The ratio of max-to-nominal stress is the theoretical Kt, not Kf.",
+ theory:"Kf ≤ Kt; notch sensitivity q = (Kf−1)/(Kt−1)."},
+
+{topic:"Fatigue",years:[2023,2023],q:"Which statement about the fatigue notch factor Kf is CORRECT?",
+ opts:["The maximum value of Kf can be equal to Kt","Kf is at maximum 80% of Kt","Kf has no relation to Kt","Kf is always equal to 1 for ductile materials"],correct:0,
+ exp:"Kf is bounded above by Kt (Kf ≤ Kt); in the limit of a fully notch-sensitive material Kf = Kt. There is no fixed 80% cap.",
+ theory:"q = (Kf−1)/(Kt−1) ranges 0 (insensitive) to 1 (Kf=Kt)."},
+
+{topic:"Fatigue",years:[2022],q:"The fatigue notch factor Kf can be used to:",
+ opts:["Assess components in the plastic field","Compute stress-strain values in the notch region","Estimate the fatigue limit of a component with a geometric change of shape/dimension","None of these"],correct:2,
+ exp:"Kf scales the un-notched fatigue limit down to account for a geometric discontinuity in the global/nominal-stress fatigue approach.",
+ theory:"Global approach: σ_adm = σ_limit / Kf applied to nominal stress."},
+
+{topic:"Fatigue",years:[2023],q:"For fatigue assessment of a notched beam under alternate bending, the CORRECT statement is:",
+ opts:["If stresses at the critical point come from a strain-gauge measurement, the LOCAL approach is used, WITHOUT the fatigue notch coefficient","If nominal stresses come from beam theory, the global approach is used without Kf","Kf must be inserted in the allowable stress in all cases","None of the others"],correct:0,
+ exp:"A strain gauge at the notch already measures the locally amplified stress, so the local approach is used and Kf must NOT be applied again (that would double-count the notch).",
+ theory:"Local approach (measured/FEM local stress): no Kf. Global approach (nominal stress): apply Kf."},
+
+{topic:"Fatigue",years:[2024],q:"Regarding the local approach to fatigue, the CORRECT statement is:",
+ opts:["It relies on measurements unaffected by notch effects","It is a method for static assessments","It does NOT require the computation of Kf","None of the others"],correct:2,
+ exp:"The local approach uses the actual local stress/strain (measured or from FEM), which already includes the notch amplification, so Kf is not needed.",
+ theory:"Global approach uses nominal stress + Kf; local approach uses the real local stress directly."},
+
+{topic:"Fatigue",years:[2022],q:"Regarding the fatigue limit surface-finish coefficient (m_s), the CORRECT statement is:",
+ opts:["Increasing surface roughness increases m_s","Increasing the material UTS decreases m_s","m_s should not be used for pure axial loading","m_s = 1 if roughness is below 10 μm"],correct:1,
+ exp:"Higher-strength steels are more sensitive to surface defects, so the surface-finish knock-down factor m_s decreases as UTS rises (rough surfaces hurt strong steels more).",
+ theory:"m_s ≤ 1 multiplies the fatigue limit; rougher surface and higher UTS → smaller m_s."},
+
+{topic:"Fatigue",years:[2022,2023],q:"The Stair-Case method for fatigue testing provides:",
+ opts:["The fatigue limit of the real component under biaxial stress","The fatigue limit at 50% probability of failure, with the possibility of computing other probabilities","The Wöhler diagram in the low-cycle region","A simplified fatigue limit from static strength only"],correct:1,
+ exp:"The staircase (up-and-down) method statistically estimates the mean fatigue limit (50% failure probability) and its scatter, allowing other survival probabilities to be derived.",
+ theory:"Each specimen is tested just above/below the previous level around the limit; the sequence yields mean and standard deviation."},
+
+{topic:"Fatigue",years:[2023],q:"Regarding the fatigue/endurance limit, the CORRECT statement is:",
+ opts:["The fatigue limit of a structural material is higher than its yield stress","Steels never have a fatigue limit","The fatigue limit is a statistical parameter requiring a safety factor in engineering applications","None of the others"],correct:2,
+ exp:"The fatigue limit is determined statistically (scatter band), so a safety factor / survival probability must be applied in design.",
+ theory:"Steels typically DO show a fatigue limit; many aluminium alloys do not."},
+
+{topic:"Fatigue",years:[2026],q:"According to Palmgren-Miner's linear damage rule, fatigue failure is predicted when:",
+ opts:["The maximum stress in any single cycle is below the fatigue limit","The total number of cycles exceeds 10⁷","The sum of the ratios n_i/N_i (applied cycles / cycles-to-failure at each level) equals 1","The mean stress exceeds the yield strength"],correct:2,
+ exp:"Miner's rule sums fractional damage: Σ(n_i/N_i) = 1 at failure, independent of sequence in its basic form.",
+ theory:"Limitations: ignores load sequence and interaction; experiments give failure at ΣD between ~0.3 and 3."},
+
+{topic:"Variable amplitude",years:[2023],q:"Regarding Miner's linear damage rule under variable amplitude, the CORRECT statement is:",
+ opts:["Miner's rule accounts for the order of cycle application","Applying high-amplitude cycles first can cause failure at total damage D < 1","Applying low-amplitude cycles first causes failure at D < 1","Miner must not be used if Rainflow counting is used"],correct:1,
+ exp:"Basic Miner ignores sequence, but in reality a high-low sequence (big cycles first, causing early micro-damage/cracks) can fail at ΣD < 1; low-high can give ΣD > 1. Rainflow is the standard companion counting method.",
+ theory:"Sequence effects are a known limitation of linear damage accumulation."},
+
+/* ---------- MULTIAXIAL FATIGUE ---------- */
+{topic:"Multiaxial fatigue",years:[2026],q:"The Gough-Pollard criterion describes the fatigue limit of ductile materials under combined in-phase bending and torsion using:",
+ opts:["A linear (Goodman) relationship","A maximum principal stress criterion","An ellipse-quadrant equation relating bending and torsional stress amplitudes","The hydrostatic stress component only"],correct:2,
+ exp:"Gough-Pollard fits experimental data with an elliptical (quadrant) relation: (σa/σlim)² + (τa/τlim)² = 1.",
+ theory:"It is an empirical criterion well suited to rotating shafts under bending + torsion."},
+
+{topic:"Multiaxial fatigue",years:[2025,2022],q:"For a shaft under rotating bending (R=−1) and a CONSTANT torque, the CORRECT assessment statement is:",
+ opts:["The Sines criterion can be adopted, although it neglects the effect of the constant torque","Gough-Pollard with τlim=0.3·UTS·ms·md/Kf and σlim=0.5·UTS·ms·md/Kf","Gough-Pollard cannot be adopted","A static assessment with torque + max bending replaces the fatigue assessment because the torque is constant"],correct:0,
+ exp:"Sines uses the alternating octahedral shear plus the mean hydrostatic stress; a constant (non-alternating) torque adds no alternating shear, so Sines effectively ignores its fatigue effect.",
+ theory:"Sines: alternating stress on octahedral plane vs material limit reduced by the first stress invariant (mean hydrostatic stress)."},
+
+{topic:"Multiaxial fatigue",years:[2025],q:"The Sines multiaxial fatigue criterion compares the alternate stress on the octahedral plane to the material's:",
+ opts:["Yield strength, reduced by the first stress invariant","Fatigue limit, reduced by the first stress invariant","Ultimate tensile strength, reduced by the first stress invariant","Fracture toughness"],correct:1,
+ exp:"Sines compares the amplitude of octahedral shear stress to the fatigue limit, penalized by the mean hydrostatic stress (first invariant of the mean stress tensor).",
+ theory:"Mean hydrostatic tension lowers the allowable alternating stress; mean shear has no effect in Sines."},
+
+{topic:"Multiaxial fatigue",years:[2024],q:"The Sines criterion:",
+ opts:["Cannot be used for the local approach","Cannot be used for the global approach","Can be used for both the local and the global approach","Is used for static assessments"],correct:2,
+ exp:"Sines is a multiaxial fatigue criterion applicable in both nominal (global) and local stress frameworks.",
+ theory:"It is a stress-based high-cycle criterion, not a static one."},
+
+{topic:"Multiaxial fatigue",years:[2023],q:"Select the CORRECT statement:",
+ opts:["The Gough-Pollard criterion is particularly suitable for rotating shafts under bending + torque","The Sines criterion can assess generic non-in-phase (out-of-phase) loading","Kt must be considered for plastic collapse of a notched ductile section","A positive mean stress is beneficial for fatigue life"],correct:0,
+ exp:"Gough-Pollard was developed precisely for shafts under combined bending and torsion. Sines is limited for strongly out-of-phase loading; positive mean stress is detrimental; Kt does not govern ductile plastic collapse.",
+ theory:"Gough-Pollard ellipse ↔ bending+torsion of shafts."},
+
+{topic:"Multiaxial fatigue",years:[2022],q:"For a shaft under rotating bending (R=−1) and VARIABLE torque (R=−1), the CORRECT statement is:",
+ opts:["A static assessment with max torque + max bending is not mandatory if fatigue is checked","The Sines criterion is not applied because of tangential stresses","Gough-Pollard cannot be adopted","The Sines OR the Gough-Pollard criterion can be adopted"],correct:3,
+ exp:"With both bending and torque alternating, either multiaxial fatigue criterion (Sines or Gough-Pollard) is applicable.",
+ theory:"Alternating shear is present, so a genuine multiaxial fatigue criterion is needed."},
+
+{topic:"Multiaxial fatigue",years:[2023],q:"For a purely hydrostatic stress state of 50 MPa (3D), the CORRECT statement is:",
+ opts:["The Tresca equivalent stress is 50 MPa","The von Mises equivalent stress is 100 MPa","The Tresca and von Mises equivalent stresses are the same","None of the others"],correct:2,
+ exp:"In a hydrostatic state all principal stresses are equal, so all deviatoric/shear differences vanish: both Tresca and von Mises give the same equivalent stress — zero.",
+ theory:"Hydrostatic pressure produces no distortion → no yielding by either deviatoric criterion."},
+
+/* ---------- STRAIN GAUGE ---------- */
+{topic:"Strain gauge",years:[2025,2023,2022],q:"For a 0°–45°–90° strain-gauge rosette measuring ε0, ε45, ε90, the in-plane Cartesian strains are obtained as:",
+ opts:["εx=ε45, εy=ε0, γxy=ε90","εx=ε0, εy=ε90, γxy = 2·ε45 − ε0 − ε90","εx=ε0, εy=ε90, γxy = ε45 only","εx=(ε0+ε90)/2 for all components"],correct:1,
+ exp:"A rectangular (0/45/90) rosette gives the two normal strains directly (εx=ε0, εy=ε90) and the shear strain from the 45° gauge: γxy = 2·ε45 − ε0 − ε90. Principal strains/directions then follow from Mohr's circle.",
+ theory:"Rosettes resolve the 2D strain tensor from three normal-strain readings; γxy cannot be measured directly, only inferred from the 45° gauge.",flag:"Strain-gauge rosette questions recur with figure/number variants — learn the formula, then plug in the exam's values."},
+
+/* ---------- WELDED JOINTS (older emphasis) ---------- */
+{topic:"Welded joints",years:[2022],q:"Concerning static assessment of a welded joint, the CORRECT statement is:",
+ opts:["Butt welding can be assessed simply based on the von Mises criterion","The same criterion (ductile) can be used for both butt and fillet welds","Fillet welds are assessed with the Galileo-Rankine criterion","None of the others"],correct:0,
+ exp:"A full-penetration butt weld restores the base section, so it is checked with the von Mises equivalent stress like the parent material. Fillet welds use a dedicated throat-section method, not the same as butt welds.",
+ theory:"Butt weld → von Mises on the section. Fillet weld → stresses on the throat area.",flag:"Weld theory was common in 2022–23 but absent from recent (2024–26) WT2 exams — lower priority."},
+
+{topic:"Welded joints",years:[2023],q:"Welding an H-beam (under bending + shear) to a base plate, it can reasonably be assumed that:",
+ opts:["Flange welds carry shear, web welds carry bending","Flange (horizontal) welds carry the bending moment, web (vertical) welds carry the shear","Shear is always negligible vs bending","Only the web welds are needed"],correct:1,
+ exp:"The flanges are far from the neutral axis → they carry the bending (normal force couple); the web is near the neutral axis and resists the shear flow.",
+ theory:"Decouple: flanges ↔ bending moment, web ↔ shear force.",flag:"Weld-design topic (2022–23 emphasis)."},
+
+{topic:"Welded joints",years:[2023],q:"Considering welded-joint assessment, select the WRONG statement:",
+ opts:["The allowable-stress method (class 2) for butt welds requires in-depth knowledge of the loads (snow, wind, earthquakes)","Butt-weld assessment is based on the von Mises stress","Fillet-welded joints connect the two parts only where the fillet weld is made","Bending and shear effects can be decoupled into different fillets (H-beam to base)"],correct:0,
+ exp:"The WRONG sentence is the first: the simple allowable-stress (class) method does NOT require detailed external-load knowledge — that level of detail belongs to more advanced methods.",
+ theory:"Class/allowable-stress weld checks use simplified nominal stresses on the throat.",flag:"Weld topic — 2022–23."},
+
+/* ---------- FRACTURE MECHANICS ---------- */
+{topic:"Fracture mechanics",years:[2026],q:"According to Griffith's energy balance, unstable crack propagation occurs when the Strain Energy Release Rate G equals or exceeds:",
+ opts:["The stress intensity factor range ΔK","The yield strength of the material","The material resistance to fracture (Gc / R)","The total potential energy of the external forces"],correct:2,
+ exp:"Griffith: the crack grows when the energy released per unit crack advance G reaches the material's fracture resistance (Gc, the critical energy release rate / R-curve value).",
+ theory:"G = π σ² a / E (infinite plate). Relation: G = K²/E' . Failure when G ≥ Gc ↔ K ≥ Kc."},
+
+{topic:"Fracture mechanics",years:[2026],q:"For a given K and yield strength, the crack-tip plastic zone size rp compares as follows between plane stress and plane strain:",
+ opts:["Larger in plane stress than in plane strain","Larger in plane strain than in plane stress","Identical in both","Vanishes completely in plane strain"],correct:0,
+ exp:"Plane-strain triaxial constraint suppresses yielding, giving a smaller plastic zone (≈1/3 of plane stress). Plane stress (thin sections) has the larger zone.",
+ theory:"rp ≈ (1/2π)(K/σy)² plane stress; ≈ (1/6π)(K/σy)² plane strain — about 3× difference."},
+
+{topic:"Fracture mechanics",years:[2023],q:"The extension of the crack-tip plastic zone is:",
+ opts:["About three times larger in plane stress than in plane strain","About three times smaller in plane stress than in plane strain","Identical in plane strain and plane stress","Constant through the thickness"],correct:0,
+ exp:"The plane-stress plastic zone is roughly 3× the plane-strain one; it therefore varies through the thickness (large at the free surfaces, small in the interior).",
+ theory:"Surfaces → plane stress (bigger zone); mid-thickness → plane strain (smaller zone)."},
+
+{topic:"Fracture mechanics",years:[2022],q:"What is the shape of the plastic zone in a cracked component of finite thickness?",
+ opts:["Constant along the thickness","Larger at the centre of the specimen than at the surfaces","Absent because the material stays elastic everywhere","Larger at the surface zones than at the centre"],correct:3,
+ exp:"At the free surfaces the state is plane stress (larger zone); in the interior it is plane strain (smaller zone). So the plastic zone is larger near the surfaces — a 'dog-bone' shape.",
+ theory:"Through-thickness transition plane-stress(surface) → plane-strain(core)."},
+
+{topic:"Fracture mechanics",years:[2025],q:"The condition B ≥ 2.5(KIC/σy)² (B = specimen thickness) ensures that fracture-toughness testing is valid under:",
+ opts:["Plane-stress conditions","Plane-strain conditions","Tearing instability","Mixed-mode cracking"],correct:1,
+ exp:"This ASTM size requirement guarantees enough thickness for predominant plane-strain constraint at the crack tip, so the measured KIC is a thickness-independent material property.",
+ theory:"Thin specimens give a thickness-dependent Kc (plane stress); only thick enough specimens give true plane-strain KIC."},
+
+{topic:"Fracture mechanics",years:[2022,2022],q:"Select the CORRECT statement about the critical stress intensity factor Kc vs fracture toughness KIC:",
+ opts:["Kc and KIC are the same for a high-resistance alloy","Kc is valid for fatigue assessment only in plane stress","Kc could replace KIC for static fracture assessment only if the component thickness equals that of the specimen used to measure Kc","Kc is obtained by a fatigue crack-propagation test"],correct:2,
+ exp:"Kc (plane stress) is thickness-dependent, so it is only transferable to a component of the same thickness as the test specimen. KIC (plane strain) is the lower-bound material property.",
+ theory:"KIC = thickness-independent plane-strain toughness; Kc ≥ KIC and depends on thickness."},
+
+{topic:"Fracture mechanics",years:[2023],q:"The fracture toughness KIC of a material is a parameter used for:",
+ opts:["Fatigue assessment under cyclic loads via fracture mechanics","The static assessment of fracture of the material","Verifying large-area plasticization","None of the others"],correct:1,
+ exp:"KIC sets the critical condition for unstable (static) fracture: failure when K ≥ KIC. Cyclic crack growth instead uses ΔK and Paris-type laws.",
+ theory:"Static fracture ↔ K vs KIC; fatigue crack growth ↔ ΔK vs da/dN curve."},
+
+{topic:"Fracture mechanics",years:[2024],q:"In Linear Elastic Fracture Mechanics, the CORRECT statement is:",
+ opts:["The energy approach is based on the local stress state at the crack tip","The stress intensity factor contains the combined effects of load, geometry and crack dimension","KIC is the critical stress intensity factor in plane-stress condition","None of the others"],correct:1,
+ exp:"K = β·σ·√(πa) bundles load (σ), geometry (β) and crack size (a). The energy approach is global (compliance/energy), not local; KIC is the plane-STRAIN critical value.",
+ theory:"K (stress-field intensity) and G (energy release rate) are linked: G = K²/E'."},
+
+{topic:"Fracture mechanics",years:[2023,2024],q:"A central crack of length a in an infinite thin plate under cyclic plane stress, material toughness KIC. The CORRECT statement is:",
+ opts:["Failure can be predicted by computing the critical crack length based on KIC","The crack propagates regardless of the load intensity","KIC depends on the crack length","None of the others"],correct:0,
+ exp:"Final (unstable) fracture is set by KIC: the critical crack length follows from K=KIC. KIC is a material constant, independent of crack length.",
+ theory:"a_crit = (1/π)(KIC/(β σmax))²."},
+
+{topic:"Fracture mechanics",years:[2026],q:"The R-curve in fracture mechanics is:",
+ opts:["Material resistance to fracture, constant for ductile materials","The stress condition at the crack apex","An account of the stress ratio in fatigue","Material resistance to fracture that varies with crack size for ductile materials"],correct:3,
+ exp:"For ductile materials the resistance R rises as the crack extends (rising R-curve); instability occurs where the driving-force curve is tangent to the R-curve.",
+ theory:"Brittle: flat R-curve (single Gc). Ductile/thin: rising R-curve → stable tearing before instability."},
+
+/* ---------- CRACK GROWTH LAWS ---------- */
+{topic:"Crack growth",years:[2026],q:"The Forman law for fatigue crack propagation improves on the Paris law by explicitly accounting for:",
+ opts:["The fatigue threshold ΔKth in Region I","The instability of crack growth as Kmax approaches the fracture toughness Kc","Retardation caused by single tensile overloads","The short-crack transition between continuum and microstructural growth"],correct:1,
+ exp:"Forman adds the (1−R)Kc − ΔK term in the denominator, so da/dN accelerates toward infinity as Kmax → Kc (Region III instability) and includes the R-ratio effect.",
+ theory:"Paris (Region II only): da/dN = C ΔKᵐ. Forman captures Region III + mean-stress (R).",flag:"Forman/Region-III is recent (2026) phrasing."},
+
+{topic:"Crack growth",years:[2025],q:"Paris & Erdogan's law models crack growth in Region II of the da/dN–ΔK curve. Its true LIMITATION is:",
+ opts:["It accounts for stress ratio R","It is valid only in Region II (stable growth)","It includes plastic-zone effects","It handles threshold behaviour"],correct:1,
+ exp:"Paris is a straight line on log-log only in the stable (Region II) middle range; it ignores R, the threshold ΔKth (Region I) and the instability (Region III).",
+ theory:"Walker/Forman extend it to R-effects and Region III; ΔKth bounds Region I."},
+
+{topic:"Crack growth",years:[2025,2025],q:"Walker's modification to the Paris law introduces a material parameter γ to capture the effect of:",
+ opts:["Crack closure","Stress ratio R","Temperature","Specimen thickness"],correct:1,
+ exp:"Walker replaces ΔK with an effective ΔK̄ = ΔK/(1−R)^(1−γ), so γ tunes the sensitivity of crack-growth rate to the stress ratio R.",
+ theory:"R = Kmin/Kmax. Higher R → faster growth; Walker (and Forman) embed this."},
+
+{topic:"Crack growth",years:[2023,2024],q:"A cracked component under cyclic stress with NEGATIVE maximum stress σmax and load ratio R>0. The CORRECT statement is:",
+ opts:["R only influences the threshold for propagation","R only influences the crack-growth rate, not the threshold/minimum length","The crack never propagates under such loading","None of the others"],correct:2,
+ exp:"If σmax is negative the crack stays closed throughout the cycle (fully compressive), so no opening Mode-I driving force exists and the crack does not grow.",
+ theory:"Crack growth needs a tensile (opening) part; compression keeps the crack closed."},
+
+/* ---------- VARIABLE AMPLITUDE / OVERLOADS ---------- */
+{topic:"Variable amplitude",years:[2026],q:"In the Wheeler model for variable-amplitude loading, the retardation factor (modifying crack-growth rate after an overload) is based on the ratio between:",
+ opts:["The current plastic zone size and the distance to the boundary of the overload plastic zone","The min and max stress intensity factors of the current cycle","The crack length and the specimen width","The yield strength and the UTS"],correct:0,
+ exp:"Wheeler scales da/dN by (rp,current / (a_OL + rp,OL − a))^m while the current plastic zone is inside the larger overload plastic zone, modelling retardation.",
+ theory:"Overload → big plastic zone + compressive residual stress → slower subsequent growth (retardation)."},
+
+{topic:"Variable amplitude",years:[2025],q:"The retardation phenomenon in crack propagation is due to:",
+ opts:["The brittle behaviour of some materials","The plastic zone at the crack apex produced by an overload","Damage caused by the application of overloads","None of the others"],correct:1,
+ exp:"A tensile overload creates a large crack-tip plastic zone; on unloading it leaves compressive residual stresses that slow (retard) subsequent crack growth.",
+ theory:"Compressive residual stress + crack closure behind the overload zone = retardation."},
+
+{topic:"Variable amplitude",years:[2026],q:"Under variable-amplitude loading, applying a significant UNDERLOAD (compressive overload) typically results in:",
+ opts:["Retardation of crack growth (crack arrest)","Acceleration of the crack growth rate","No change in the growth rate","Immediate transition to brittle fracture"],correct:1,
+ exp:"A compressive underload flattens the crack-tip plasticity and can reduce crack closure, partially cancelling retardation — net effect is acceleration relative to a tensile overload alone.",
+ theory:"Tensile overload → retardation; compressive underload → acceleration / reduced retardation."},
+
+/* ---------- SHM / DIGITAL TWIN (recent) ---------- */
+{topic:"SHM / Digital Twin",years:[2025],q:"In SHM using the Digital Twin framework, the feature extraction & data reduction step is meant to:",
+ opts:["Detect damage locations from strain energy","Transform raw sensor data into damage-sensitive features","Identify loading history","Update material model parameters"],correct:1,
+ exp:"Feature extraction condenses large raw sensor streams into a small set of damage-sensitive features that the diagnostic algorithms then use.",
+ theory:"SHM pipeline: operational evaluation → data acquisition → feature extraction/selection → statistical model for damage detection.",flag:"SHM/Digital-Twin is a NEW topic in the Advanced Machine Design syllabus (2025–26). High priority."},
+
+{topic:"SHM / Digital Twin",years:[2025],q:"In the SHM–PHM framework, the process comprises four functional levels. Which activity is NOT one of them?",
+ opts:["Operational evaluation","Data acquisition & networking","Feature selection & extraction","Finite-element mesh optimisation"],correct:3,
+ exp:"The four SHM levels are operational evaluation, data acquisition & networking, feature extraction/selection, and statistical modelling for damage identification. FE mesh optimisation is not one of them.",
+ theory:"Rytter's hierarchy of damage ID: detection → localization → quantification → prognosis.",flag:"SHM is a recent (2025–26) addition."},
+
+{topic:"SHM / Digital Twin",years:[2026],q:"In the Digital Twin framework, the Digital Shadow is distinguished from the Digital Master by the addition of:",
+ opts:["Conditions for Safe-Life certification","Condition monitoring and operative data acquired from the real system","A high-fidelity physics-based computational model","A simulation model only, with no real-world data connection"],correct:1,
+ exp:"Digital Master = the high-fidelity model. Digital Shadow adds the one-way flow of monitored/operational data from the physical asset. The full Digital Twin closes the loop (two-way) back to the asset.",
+ theory:"Master (model) → Shadow (model + real data in) → Twin (bidirectional, model can act on asset).",flag:"Digital Twin terminology is recent (2026)."},
+
+/* ---------- CASE STUDY: DE HAVILLAND COMET (recent) ---------- */
+{topic:"Case study (Comet)",years:[2026],q:"The De Havilland Comet 1 investigation showed the full-scale static test on the prototype fuselage was misleading because:",
+ opts:["It was performed at a temperature much higher than altitude temperature","High overload during the test induced residual compressive stresses that artificially delayed fatigue crack initiation","The pressurization cycles were applied too rapidly","The test omitted the square windows, the real failure source"],correct:1,
+ exp:"The same airframe was static-proof-tested to high pressure before fatigue testing; the overload introduced beneficial compressive residual stresses at the window corners, delaying crack initiation and making fatigue life look longer than in service.",
+ theory:"Real cause of service failures: fatigue cracks at the square window corners (high Kt). Lesson: don't fatigue-test a specimen that has seen an overload.",flag:"Historical case-study questions were introduced in the 2026 exams."},
+
+{topic:"Case study (Comet)",years:[2026],q:"According to the Comet 1 findings, the fatigue cracks that caused fuselage disintegration initiated at:",
+ opts:["The wing-root attachments due to gust loads","The corners of the square windows due to high stress concentration","The turbine disks due to resonance","The tail-plane bolts due to fretting"],correct:1,
+ exp:"Pressurization cycles drove fatigue cracks from the sharp corners of the (then square) cabin windows/hatches, where the stress concentration was highest.",
+ theory:"Outcome: aircraft windows became rounded (oval) to cut Kt. Foundational fatigue/fracture case study.",flag:"Recent (2026) case-study topic."}
+];
+
+/* ============================ APP LOGIC ============================ */
+const $ = id => document.getElementById(id);
+let quizSet=[], cur=0, answers=[], timerId=null, remaining=0, elapsed=0, countdown=true, weakMode=false;
+
+/* ---- persistent storage (this browser only) ---- */
+const LS={
+  get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set:(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const qid = q => q.q;                              // question text is the stable key
+const getStats   = () => LS.get("amd_qstats",{});  // { [qid]: {seen,wrong,topic} }
+const getHistory = () => LS.get("amd_history",[]); // [ {date,n,score,right,wrong,blank,time,topics:{}} ]
+function weakIds(){ const s=getStats(); return Object.keys(s).filter(k=>s[k].wrong>0); }
+
+function topics(){ return [...new Set(BANK.map(q=>q.topic))].sort(); }
+function isRecent(q){ return q.years.some(y=>y>=2024); }
+function weightOf(q){
+  // recency + frequency
+  let w=0; q.years.forEach(y=> w += (y>=2024?3:1));
+  return w;
+}
+
+function initHome(){
+  const ts=$("topicSel"); ts.innerHTML='<option value="">All topics</option>'+
+    topics().map(t=>`<option value="${t}">${t} (${BANK.filter(q=>q.topic===t).length})</option>`).join("");
+  const rec=BANK.filter(isRecent).length;
+  $("bankStat").innerHTML=
+    `<div class="box"><div class="n">${BANK.length}</div><div class="l">Questions</div></div>`+
+    `<div class="box"><div class="n">${topics().length}</div><div class="l">Topics</div></div>`+
+    `<div class="box"><div class="n">${rec}</div><div class="l">From 2024–26</div></div>`+
+    `<div class="box"><div class="n">2022–26</div><div class="l">Exam years</div></div>`;
+  const nWeak=weakIds().length;
+  $("weakBtn").disabled = nWeak===0;
+  $("weakBtn").textContent = nWeak ? `🎯 Practice weak spots (${nWeak})` : "🎯 No weak spots yet";
+  renderHistory();
+}
+
+function renderHistory(){
+  const hist=getHistory(), stats=getStats();
+  const c=$("histCard");
+  if(!hist.length){
+    c.innerHTML=`<b>History</b><div class="muted small" style="margin-top:6px">No sessions yet. Your scores and most-missed questions will appear here after your first exam.</div>`;
+    return;
+  }
+  // trend stats
+  const last=hist[hist.length-1];
+  const avg=(hist.reduce((s,h)=>s+(h.score/h.n),0)/hist.length*100).toFixed(0);
+  // most-missed topics
+  const tw={};
+  Object.values(stats).forEach(s=>{ if(s.wrong>0){ tw[s.topic]=(tw[s.topic]||0)+s.wrong; } });
+  const topMiss=Object.entries(tw).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  // most-missed individual questions
+  const qMiss=Object.entries(stats).filter(([k,v])=>v.wrong>0).sort((a,b)=>b[1].wrong-a[1].wrong).slice(0,5);
+  const rows=hist.slice(-8).reverse().map(h=>{
+    const pct=Math.max(0,h.score)/h.n*100;
+    const col=pct>=70?'var(--good)':pct>=50?'var(--warn)':'var(--bad)';
+    return `<tr>
+      <td class="muted small">${h.date}</td>
+      <td class="small">${h.mode||'exam'}${h.n? ' · '+h.n+'q':''}</td>
+      <td style="color:${col};font-weight:700">${h.score>0?'+':''}${h.score.toFixed(1)}/${h.n}</td>
+      <td class="small"><span style="color:var(--good)">${h.right}✓</span> <span style="color:var(--bad)">${h.wrong}✗</span> <span style="color:var(--warn)">${h.blank}–</span></td>
+    </tr>`;
+  }).join("");
+  c.innerHTML=
+    `<div class="row" style="justify-content:space-between;align-items:center">
+       <b>History</b>
+       <button class="btn sec small" id="clearHist" style="padding:6px 12px">Clear history</button>
+     </div>
+     <div class="stat" style="margin-top:12px">
+       <div class="box"><div class="n">${hist.length}</div><div class="l">Sessions</div></div>
+       <div class="box"><div class="n">${avg}%</div><div class="l">Avg of max</div></div>
+       <div class="box"><div class="n">${weakIds().length}</div><div class="l">Weak questions</div></div>
+     </div>
+     <div class="tablewrap"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:340px">
+       <thead><tr class="muted small" style="text-align:left">
+         <th style="padding:4px 6px">Date</th><th>Mode</th><th>Score</th><th>Detail</th></tr></thead>
+       <tbody>${rows}</tbody>
+     </table></div>` +
+    (topMiss.length? `<div style="margin-top:14px"><div class="muted small" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Most-missed topics</div>`+
+       topMiss.map(([t,n])=>`<span class="chip old" style="margin:2px 4px 2px 0">${t} · ${n}✗</span>`).join("")+`</div>`:``) +
+    (qMiss.length? `<details style="margin-top:10px"><summary>Most-missed questions (${qMiss.length})</summary>`+
+       qMiss.map(([k,v])=>`<div class="small" style="margin:6px 0;padding-left:10px;border-left:2px solid var(--bad)"><b style="color:var(--bad)">${v.wrong}× wrong</b> <span class="muted">(${v.seen} seen)</span><br>${k}</div>`).join("")+`</details>`:``);
+  $("clearHist").onclick=()=>{ if(confirm("Erase all saved history and mistake tracking?")){ LS.set("amd_history",[]); LS.set("amd_qstats",{}); initHome(); } };
+}
+
+function pickQuestions(){
+  let pool=BANK.slice();
+  if(weakMode){
+    const wrong=getStats();
+    pool=BANK.filter(q=>wrong[qid(q)] && wrong[qid(q)].wrong>0);
+  } else {
+    const topic=$("topicSel").value;
+    if(topic) pool=pool.filter(q=>q.topic===topic);
+    if($("recentOnly").checked) pool=pool.filter(isRecent);
+  }
+  let n=parseInt($("numQ").value)||0;
+  if(weakMode) n=0;                    // weak mode: use every weak question
+  if(n===0||n>pool.length) n=pool.length;
+  const stats=getStats();
+  const weighted=$("weighted").checked;
+  const chosen=[];
+  const work=pool.slice();
+  while(chosen.length<n && work.length){
+    let idx;
+    if(weighted){
+      const tot=work.reduce((s,q)=>s+weightOf(q),0);
+      let r=Math.random()*tot;
+      idx=0; for(let i=0;i<work.length;i++){ r-=weightOf(work[i]); if(r<=0){idx=i;break;} }
+    } else idx=Math.floor(Math.random()*work.length);
+    chosen.push(work.splice(idx,1)[0]);
+  }
+  // shuffle option order per question, remembering correct mapping
+  return chosen.map(q=>{
+    const order=q.opts.map((_,i)=>i).sort(()=>Math.random()-0.5);
+    const opts=order.map(i=>q.opts[i]);
+    let correct;
+    if(q.multi){ correct=q.correct.map(c=>order.indexOf(c)); }
+    else { correct=order.indexOf(q.correct); }
+    return {...q, opts, correct, _order:order};
+  });
+}
+
+function startQuiz(){
+  quizSet=pickQuestions();
+  if(!quizSet.length){ alert("No questions match this filter."); return; }
+  answers=quizSet.map(()=>({sel:null, skipped:false}));
+  cur=0;
+  $("home").classList.add("hide"); $("results").classList.add("hide"); $("quiz").classList.remove("hide");
+  const mins=parseFloat($("mins").value)||0;
+  countdown = mins>0;
+  remaining=mins*60; elapsed=0;
+  if(timerId) clearInterval(timerId);
+  timerId=setInterval(tick,1000); updateTimer();
+  renderQ();
+}
+
+function tick(){
+  if(countdown){ remaining--; if(remaining<=0){ remaining=0; updateTimer(); finish(true); return; } }
+  else elapsed++;
+  updateTimer();
+}
+function fmt(s){ const m=Math.floor(s/60), x=s%60; return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`; }
+function updateTimer(){
+  const t=$("timer");
+  if(countdown){ t.textContent=fmt(remaining); t.className="timer"+(remaining<=30?" crit":remaining<=120?" warn":""); }
+  else { t.textContent="⏱ "+fmt(elapsed); t.className="timer"; }
+}
+
+function renderQ(){
+  const q=quizSet[cur], a=answers[cur];
+  $("prog").style.width=((cur)/quizSet.length*100)+"%";
+  $("qcount").textContent=(weakMode?"🎯 Weak-spot review · ":"")+`Question ${cur+1} of ${quizSet.length}`;
+  const yrs=q.years.slice().sort((a,b)=>b-a);
+  $("qmeta").innerHTML=
+    `<span class="chip topic">${q.topic}</span>`+
+    `<span class="chip ${isRecent(q)?'recent':'old'}">${isRecent(q)?'Recent ':'Older '}· ${[...new Set(yrs)].join(', ')}</span>`+
+    (q.multi?`<span class="chip">Select all that apply</span>`:``);
+  $("qtext").textContent=q.q;
+  const labels=["A","B","C","D","E"];
+  $("opts").innerHTML=q.opts.map((o,i)=>{
+    const sel=q.multi ? (a.sel||[]).includes(i) : a.sel===i;
+    return `<div class="opt ${sel?'sel':''}" data-i="${i}"><div class="mk">${sel?'✓':labels[i]}</div><div class="ot">${o}</div></div>`;
+  }).join("");
+  [...$("opts").children].forEach(el=>el.onclick=()=>select(parseInt(el.dataset.i)));
+  $("prevBtn").disabled=cur===0;
+  $("nextBtn").textContent = cur===quizSet.length-1 ? "Finish ✓" : "Next →";
+}
+
+function select(i){
+  const q=quizSet[cur], a=answers[cur];
+  if(q.multi){ a.sel=a.sel||[]; const k=a.sel.indexOf(i); if(k>=0)a.sel.splice(k,1); else a.sel.push(i); }
+  else a.sel=i;
+  a.skipped=false; renderQ();
+}
+
+$("startBtn").onclick=()=>{ weakMode=false; startQuiz(); };
+$("weakBtn").onclick=()=>{ if(weakIds().length===0){alert("No mistakes recorded yet — do a session first!");return;} weakMode=true; startQuiz(); };
+
+/* ---- export / import progress between devices ---- */
+function snapshot(){ return btoa(unescape(encodeURIComponent(JSON.stringify({v:1,h:getHistory(),s:getStats()})))); }
+$("exportBtn").onclick=()=>{
+  const code=snapshot(), box=$("syncBox");
+  box.classList.remove("hide"); box.value=code; box.focus(); box.select();
+  if(navigator.clipboard){ navigator.clipboard.writeText(code).then(
+    ()=>{$("syncMsg").textContent="✓ Copied. Paste it into Import on your other device.";},
+    ()=>{$("syncMsg").textContent="Select all the text above and copy it.";}); }
+  else $("syncMsg").textContent="Select all the text above and copy it.";
+};
+$("importBtn").onclick=()=>{
+  const box=$("syncBox");
+  if(box.classList.contains("hide") || !box.value.trim()){
+    box.classList.remove("hide"); box.value=""; box.focus();
+    $("syncMsg").textContent="Paste your exported code above, then tap Import again."; return;
+  }
+  try{
+    const d=JSON.parse(decodeURIComponent(escape(atob(box.value.trim()))));
+    if(d.s){ const cur=getStats();
+      for(const k in d.s){ if(!cur[k]) cur[k]=d.s[k];
+        else { cur[k].seen=Math.max(cur[k].seen||0,d.s[k].seen||0); cur[k].wrong=Math.max(cur[k].wrong||0,d.s[k].wrong||0); cur[k].topic=d.s[k].topic||cur[k].topic; } }
+      LS.set("amd_qstats",cur); }
+    if(d.h){ LS.set("amd_history",[...getHistory(),...d.h].slice(-100)); }
+    box.classList.add("hide"); box.value=""; $("syncMsg").textContent="✓ Imported and merged."; initHome();
+  }catch(e){ $("syncMsg").textContent="✗ Invalid code — paste the whole thing you exported."; }
+};
+$("nextBtn").onclick=()=>{ if(cur<quizSet.length-1){cur++;renderQ();} else finish(false); };
+$("prevBtn").onclick=()=>{ if(cur>0){cur--;renderQ();} };
+$("skipBtn").onclick=()=>{ answers[cur].skipped=true; answers[cur].sel=null; if(cur<quizSet.length-1){cur++;renderQ();} else finish(false); };
+$("quitBtn").onclick=()=>{ if(confirm("Quit this exam? Progress is lost.")){ clearInterval(timerId); $("quiz").classList.add("hide"); $("home").classList.remove("hide"); initHome(); } };
+
+document.addEventListener("keydown",e=>{
+  if($("quiz").classList.contains("hide")) return;
+  if(["1","2","3","4","5"].includes(e.key)){ const i=parseInt(e.key)-1; if(i<quizSet[cur].opts.length) select(i); }
+  else if(e.key==="ArrowRight") $("nextBtn").click();
+  else if(e.key==="ArrowLeft") $("prevBtn").click();
+});
+
+function isCorrect(q,a){
+  if(a.sel===null||a.sel===undefined) return false;
+  if(q.multi){ const s=[...a.sel].sort().join(","), c=[...q.correct].sort().join(","); return s===c; }
+  return a.sel===q.correct;
+}
+
+function finish(timeUp){
+  clearInterval(timerId);
+  let score=0, right=0, wrong=0, blank=0;
+  const stats=getStats(), topicW={};
+  quizSet.forEach((q,i)=>{
+    const a=answers[i];
+    const key=qid(q);
+    const st=stats[key]||{seen:0,wrong:0,topic:q.topic};
+    st.seen++; st.topic=q.topic;
+    let res;
+    if(a.sel===null||a.sel===undefined){ blank++; score-=0.5; res="blank"; }
+    else if(isCorrect(q,a)){ right++; score+=1; res="ok";
+      if(weakMode) st.wrong=Math.max(0,st.wrong-1); }   // got a former weak one right → recover
+    else { wrong++; score-=0.5; res="wrong"; st.wrong++; }
+    if(res!=="ok"){ topicW[q.topic]=(topicW[q.topic]||0)+ (res==="wrong"?1:0); }
+    stats[key]=st;
+  });
+  const max=quizSet.length;
+  // persist
+  LS.set("amd_qstats",stats);
+  const hist=getHistory();
+  hist.push({ date:new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}),
+    mode: weakMode?'weak':'exam', n:max, score:+score.toFixed(1), right, wrong, blank,
+    time: countdown?((parseFloat($("mins").value)*60)-remaining):elapsed, topics:topicW });
+  LS.set("amd_history", hist.slice(-100));
+  $("quiz").classList.add("hide"); $("results").classList.remove("hide");
+  const pct=Math.max(0,score)/max*100;
+  $("scoreNum").textContent=`${score>0?'+':''}${score.toFixed(1)} / ${max}`;
+  $("scoreSub").textContent=(timeUp?"⏰ Time up. ":"")+`${right} correct · ${wrong} wrong · ${blank} blank`+
+    `   (${pct.toFixed(0)}% of max)`;
+  const col = pct>=70?'var(--good)':pct>=50?'var(--warn)':'var(--bad)';
+  const gf=$("gradeFill"); gf.style.width=pct+"%"; gf.style.background=col;
+  $("resStat").innerHTML=
+    `<div class="box"><div class="n" style="color:var(--good)">${right}</div><div class="l">Correct +${right}</div></div>`+
+    `<div class="box"><div class="n" style="color:var(--bad)">${wrong}</div><div class="l">Wrong −${(wrong*0.5).toFixed(1)}</div></div>`+
+    `<div class="box"><div class="n" style="color:var(--warn)">${blank}</div><div class="l">Blank −${(blank*0.5).toFixed(1)}</div></div>`+
+    `<div class="box"><div class="n">${countdown?fmt((parseFloat($("mins").value)*60)-remaining):fmt(elapsed)}</div><div class="l">Time used</div></div>`;
+  renderReview(false);
+}
+
+function renderReview(wrongOnly){
+  const labels=["A","B","C","D","E"];
+  const html=quizSet.map((q,i)=>{
+    const a=answers[i], ok=isCorrect(q,a), blank=(a.sel===null||a.sel===undefined);
+    if(wrongOnly && ok) return "";
+    const corr = q.multi?q.correct:[q.correct];
+    const sel = q.multi?(a.sel||[]):(blank?[]:[a.sel]);
+    const optsHtml=q.opts.map((o,j)=>{
+      let cls="opt disabled";
+      if(corr.includes(j)) cls+=" correct";
+      else if(sel.includes(j)) cls+=" wrong";
+      const mk= corr.includes(j)?"✓":(sel.includes(j)?"✗":labels[j]);
+      return `<div class="${cls}"><div class="mk">${mk}</div><div class="ot">${o}</div></div>`;
+    }).join("");
+    const badge = blank?`<span class="badge skip">BLANK −0.5</span>`: ok?`<span class="badge ok">CORRECT +1</span>`:`<span class="badge no">WRONG −0.5</span>`;
+    return `<div class="rev-q">
+      <div class="rev-h">${badge}<span class="chip topic">${q.topic}</span><span class="muted small">${[...new Set(q.years)].sort((a,b)=>b-a).join(', ')}</span></div>
+      <div class="qtext" style="font-size:15px">${q.q}</div>
+      ${optsHtml}
+      <div class="exp"><div class="lab">Why</div>${q.exp}</div>
+      <div class="exp theory"><div class="lab">Theory</div>${q.theory}</div>
+      ${q.flag?`<div class="flagbox">⚠ ${q.flag}</div>`:``}
+    </div>`;
+  }).join("");
+  $("review").innerHTML = html || `<div class="card" style="text-align:center" class="muted">No questions to show 🎉</div>`;
+}
+
+$("againBtn").onclick=()=>{ $("results").classList.add("hide"); $("home").classList.remove("hide"); initHome(); window.scrollTo(0,0); };
+$("reviewWrongBtn").onclick=()=>{ renderReview(true); $("review").scrollIntoView({behavior:'smooth'}); };
+$("reviewAllBtn").onclick=()=>{ renderReview(false); $("review").scrollIntoView({behavior:'smooth'}); };
+
+initHome();
+</script>
+</body>
+</html>
