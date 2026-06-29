@@ -87,12 +87,30 @@ select,input[type=number]{background:var(--panel2);color:var(--txt);border:1px s
 .badge.skip{background:var(--warn-bg);color:var(--warn);}
 .muted{color:var(--muted);}
 .small{font-size:12.5px;}
-.hide{display:none;}
+.hide{display:none!important;}
 .scorebig{font-size:46px;font-weight:800;text-align:center;line-height:1;}
 .scoresub{text-align:center;color:var(--muted);margin-top:6px;}
 .gradebar{height:12px;border-radius:8px;background:var(--panel2);overflow:hidden;margin:18px 0;}
 .gradebar > i{display:block;height:100%;}
 details summary{cursor:pointer;color:var(--accent);font-size:13.5px;margin-top:8px;}
+.learnbtn{margin-top:12px;background:var(--accent2);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13.5px;font-weight:650;cursor:pointer;}
+.learnbtn:hover{background:var(--accent);}
+.modal-overlay{position:fixed;inset:0;background:rgba(5,9,14,.82);z-index:60;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:22px 12px;-webkit-overflow-scrolling:touch;}
+.modal-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:760px;width:100%;padding:24px;position:relative;margin:auto;}
+.modal-close{position:sticky;float:right;top:0;background:var(--panel2);border:1px solid var(--line);color:var(--txt);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:17px;line-height:1;z-index:2;}
+.concept h2{margin:0 40px 2px 0;font-size:21px;color:var(--accent);}
+.concept .lead{color:var(--muted);font-size:13.5px;margin-bottom:6px;}
+.concept h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);margin:22px 0 8px;border-bottom:1px solid var(--line);padding-bottom:5px;}
+.concept p{font-size:14.5px;margin:9px 0;}
+.formula{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;margin:10px 0;}
+.formula .eq{font-family:"Cambria Math","Latin Modern Math",Georgia,serif;font-size:17px;display:block;margin-bottom:7px;color:var(--txt);}
+.formula .term{color:var(--muted);font-size:13px;display:block;margin:2px 0;padding-left:12px;}
+.concept .ex{background:var(--good-bg);border:1px solid #2c5e4c;border-radius:8px;padding:12px 14px;margin-top:10px;font-size:14px;}
+.concept .ex b{color:var(--good);}
+.concept .fig{background:#0b1117;border:1px solid var(--line);border-radius:10px;padding:14px 10px;margin:14px 0;text-align:center;}
+.concept .fig svg{max-width:100%;height:auto;}
+.concept .cap{color:var(--muted);font-size:12.5px;margin-top:8px;line-height:1.45;}
+.concept .keyrow{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 2px;}
 .foot{color:var(--muted);font-size:12px;text-align:center;margin-top:30px;}
 kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12px;}
 .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:14px;}
@@ -221,6 +239,13 @@ kbd{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padd
   </div>
 
   <div class="foot">Built from your exam archive · 2022–2026 · Keyboard: <kbd>1-4</kbd> select · <kbd>→</kbd> next</div>
+</div>
+
+<div id="modal" class="modal-overlay hide">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    <div id="modalBody" class="concept"></div>
+  </div>
 </div>
 
 <script>
@@ -843,6 +868,518 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="ArrowLeft") $("prevBtn").click();
 });
 
+/* ============================ DEEP-DIVE CONCEPT LIBRARY ============================ */
+/* Course-accurate notation taken from Prof. Giglio's formula sheet. Each question links */
+/* to ONE concept via conceptFor(). Opened with the "Learn more" button in the review.   */
+function conceptFor(q){
+  const t=q.q.toLowerCase(), tp=q.topic;
+  if(/neuber/.test(t)) return 'neuber';
+  if(/goodman/.test(t)) return 'goodman';
+  if(/notch factor|fatigue notch|\bkf\b/.test(t)) return 'kf';
+  if(/locking|hourglass|reduced integration|brick|hexahedral|gauss|quadrilateral|q4/.test(t)) return 'femlock';
+  if(/isoparametric|degrees of freedom|shape function|completeness|equivalent nodal|convergence|plane problem|h-adaptivity/.test(t)) return /plane problem/.test(t)?'pss':'fem';
+  if(/plastic zone/.test(t)) return 'pzone';
+  if(/plane stress|plane strain/.test(t)) return 'pss';
+  if(/fracture toughness|critical stress intensity|\bkic\b|r-curve|plane-strain conditions|b ≥|2\.5/.test(t)) return 'tough';
+  if(/staircase|stair-case|s-n|wöhler|wohler|endurance|fatigue limit|asymptote/.test(t)) return 'sn';
+  if(/griffith|strain energy release|stress intensity factor|lefm|energy approach/.test(t)) return 'frac';
+  if(/forman|paris|walker|region ii|da\/dn/.test(t)) return 'growth';
+  if(/wheeler|miner|palmgren|retardation|overload|underload/.test(t)) return 'varamp';
+  if(/sines|gough|pollard/.test(t)) return 'multi';
+  if(/rosette|strain gauge/.test(t)) return 'gauge';
+  if(/comet|safe life|fail safe|damage toler/.test(t)) return 'design';
+  if(/grammel|mariotte|rotating|hollow disk|hollow cylinder|annular|c2|axis-symmetric|axisymmetric/.test(t)) return 'axi';
+  if(/neutral axis|plasticization|elasto-plastic|fully plastic|residual stress|bending moment of total/.test(t)) return 'pbend';
+  const map={'Design criteria':'design','Force method':'force','FEM':'fem','Axisymmetric':'axi',
+    'Plasticity':'pbend','Stress concentration':'kt','Fatigue':'sn','Multiaxial fatigue':'multi',
+    'Variable amplitude':'varamp','Crack growth':'growth','Fracture mechanics':'frac',
+    'Welded joints':'weld','SHM / Digital Twin':'shm','Case study (Comet)':'design','Strain gauge':'gauge'};
+  return map[tp]||'fem';
+}
+
+/* small svg helpers kept inline in each concept for portability */
+const CONCEPTS = {
+
+design:{t:"Design philosophies & the Comet lesson",h:`
+<h2>Design philosophies</h2>
+<div class="lead">Safe-Life · Fail-Safe · Damage-Tolerant — and why the Comet crashed.</div>
+<h3>Theory</h3>
+<p><b>Safe-Life:</b> compute a finite life (cycles or flight hours) with a safety factor and retire the part at that limit — even if it still looks perfect. Used where inspection is impossible and a single crack is catastrophic (e.g. landing-gear, turbine disks).</p>
+<p><b>Fail-Safe:</b> design redundancy/multiple load paths so that if one element fails, the structure still carries the load until the failure is found. Retire/repair when redundancy is compromised.</p>
+<p><b>Damage-Tolerant:</b> assume cracks already exist; use fracture mechanics to predict their growth and schedule inspections so a crack is found (at a detectable size) long before it becomes critical. Retire on detected crack size.</p>
+<h3>The De Havilland Comet 1 (1954)</h3>
+<p>The world's first jet airliner broke up in flight from <b>fatigue cracks at the corners of its square cabin windows</b> (very high stress concentration, K<sub>t</sub>). The full-scale fatigue test had been run on a fuselage that was <b>first static-proof-tested to high pressure</b>: that overload left beneficial <b>compressive residual stresses</b> at the window corners, which delayed crack initiation and made the test life look far longer than the real service life.</p>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<rect x="30" y="45" width="90" height="60" rx="4" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+<text x="75" y="38" fill="#ff6b6b" font-size="11" text-anchor="middle">Square window</text>
+<circle cx="33" cy="48" r="3" fill="#ff6b6b"/><path d="M33 48 l14 7" stroke="#ff6b6b" stroke-width="2"/>
+<text x="75" y="80" fill="#9aa7b6" font-size="10" text-anchor="middle">crack from corner</text>
+<rect x="210" y="45" width="90" height="60" rx="30" fill="none" stroke="#3ecf8e" stroke-width="2"/>
+<text x="255" y="38" fill="#3ecf8e" font-size="11" text-anchor="middle">Oval window</text>
+<text x="255" y="80" fill="#9aa7b6" font-size="10" text-anchor="middle">low K&#8348;</text>
+<text x="165" y="78" fill="#cdd6e0" font-size="16" text-anchor="middle">&#8594;</text>
+</svg><div class="cap">Sharp corners concentrate stress; rounding the windows cut K<sub>t</sub> dramatically. The fix is now standard on every pressurized aircraft.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Why the test misled:</b> a proof load of, say, 1.33× the cabin pressure yields the material locally at the window corner. On unloading, that zone is left in <b>compression</b> (like shot-peening). The next pressurization cycles must first overcome this compression, so crack initiation is artificially postponed — the test fuselage survived ~3× more cycles than aircraft that never saw the proof load.</div>`},
+
+force:{t:"Force method (statically indeterminate)",h:`
+<h2>Force method</h2>
+<div class="lead">Solving structures with more constraints than equilibrium equations.</div>
+<h3>Theory</h3>
+<p>A structure is <b>statically indeterminate</b> when reactions/internal forces cannot be found from equilibrium alone (more unknown reactions than the 3 planar equilibrium equations). The <b>force (flexibility) method</b> removes the extra "redundant" constraints to get a stable, determinate <b>primary structure</b>, then re-applies the unknown redundant forces X.</p>
+<p>The missing equations come from <b>compatibility</b>: the displacement (or rotation) at each removed constraint must equal its true value (usually zero, because the support is actually there).</p>
+<h3>Key formula (one redundant X)</h3>
+<div class="formula"><span class="eq">δ₁₀ + δ₁₁·X = 0  ⟹  X = − δ₁₀ / δ₁₁</span>
+<span class="term">δ₁₀ = displacement at the released point caused by the external loads (primary structure)</span>
+<span class="term">δ₁₁ = displacement at that point caused by a unit redundant force X = 1</span>
+<span class="term">X = the redundant reaction; the condition forces the real displacement to 0</span></div>
+<p>δ terms are computed with the unit-load (PLV / Mohr integral) method: δ = ∫ M·m/(E·J) dx.</p>
+<div class="fig"><svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg">
+<line x1="30" y1="70" x2="330" y2="70" stroke="#cdd6e0" stroke-width="3"/>
+<path d="M24 70 l0 18 M24 88 l-6 8 M30 88 l-6 8 M36 88 l-6 8" stroke="#cdd6e0" stroke-width="1.5"/>
+<text x="24" y="58" fill="#cdd6e0" font-size="11" text-anchor="middle">A (clamp)</text>
+<polygon points="330,70 322,86 338,86" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<text x="330" y="104" fill="#4ea1ff" font-size="11" text-anchor="middle">B (redundant)</text>
+<line x1="180" y1="40" x2="180" y2="66" stroke="#ff6b6b" stroke-width="2"/><polygon points="180,68 176,58 184,58" fill="#ff6b6b"/>
+<text x="180" y="34" fill="#ff6b6b" font-size="11" text-anchor="middle">F</text>
+<text x="330" y="58" fill="#4ea1ff" font-size="13" text-anchor="middle">X↑</text>
+</svg><div class="cap">Remove support B → cantilever (primary). δ₁₀ = tip deflection from F; impose δ_B = δ₁₀ + δ₁₁X = 0 to find the reaction X at B.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Propped cantilever, point load F at mid-span, length L:</b> release the prop B. From the cantilever, δ₁₀ = 5FL³/48EJ (downward) and δ₁₁ = L³/3EJ. Then <b>X = −δ₁₀/δ₁₁ = −5F/16</b> (i.e. the prop pushes up with 5F/16). All other reactions follow from equilibrium.</div>`},
+
+fem:{t:"FEM fundamentals",h:`
+<h2>FEM fundamentals</h2>
+<div class="lead">Shape functions, nodal loads, completeness, convergence.</div>
+<h3>Theory</h3>
+<p>FEM discretizes a body into <b>elements</b> connected at <b>nodes</b>. Inside each element the displacement field is interpolated from the nodal values by <b>shape functions</b> N<sub>i</sub>; strains (and then stresses) come from their <b>derivatives</b>, so stress is one polynomial order lower and least accurate at nodes — it is most accurate at the internal <b>Gauss (integration) points</b>.</p>
+<p>External/distributed loads are converted into statically <b>equivalent nodal forces</b>. A 2-node beam element in 3D has <b>6 DOF per node</b> (3 translations + 3 rotations) → 12 DOF; a truss node has 3 DOF (translations only).</p>
+<p><b>Completeness</b>: shape functions must reproduce rigid-body motion (zero strain) and constant-strain states, or the solution won't converge (it must pass the "patch test"). <b>Isoparametric</b> elements use the same N<sub>i</sub> for geometry and displacement, allowing arbitrary distorted/curved shapes. Always run a <b>mesh-convergence study</b> (refine until results stop changing). <b>h-adaptivity</b> = refine element size h; <b>p-adaptivity</b> = raise polynomial order p.</p>
+<div class="formula"><span class="eq">u(x) = Σ Nᵢ(x)·uᵢ ,   {F} = [K]{u}</span>
+<span class="term">Nᵢ = shape function of node i (=1 at its node, 0 at the others)</span>
+<span class="term">uᵢ = nodal displacement; [K] = stiffness matrix; {F} = equivalent nodal loads</span></div>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<rect x="60" y="40" width="120" height="70" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<circle cx="60" cy="40" r="4" fill="#4ea1ff"/><circle cx="180" cy="40" r="4" fill="#4ea1ff"/>
+<circle cx="60" cy="110" r="4" fill="#4ea1ff"/><circle cx="180" cy="110" r="4" fill="#4ea1ff"/>
+<text x="120" y="80" fill="#9aa7b6" font-size="11" text-anchor="middle">Q4 element</text>
+<path d="M230 110 C 250 110, 250 50, 300 50" fill="none" stroke="#3ecf8e" stroke-width="2"/>
+<line x1="230" y1="110" x2="300" y2="110" stroke="#6b7785" stroke-width="1"/>
+<line x1="230" y1="110" x2="230" y2="45" stroke="#6b7785" stroke-width="1"/>
+<text x="300" y="44" fill="#3ecf8e" font-size="10">N₁</text>
+<text x="265" y="128" fill="#9aa7b6" font-size="10" text-anchor="middle">shape function</text>
+</svg><div class="cap">Bilinear shape function = 1 at its own node and 0 at all others; the field is the weighted sum over nodes.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Plane bracket:</b> coarse mesh gives peak stress 180 MPa; halving element size → 240 MPa; halving again → 255 MPa; next → 258 MPa. The result has <b>converged</b> to ≈258 MPa. Reporting the 180 MPa coarse value would dangerously under-predict the notch stress.</div>`},
+
+femlock:{t:"Integration, shear locking & hourglassing",h:`
+<h2>Numerical integration: locking & hourglassing</h2>
+<div class="lead">Why element/integration choice changes the answer.</div>
+<h3>Theory</h3>
+<p>Element stiffness is integrated numerically at <b>Gauss points</b>. The number of points affects BOTH stress and strain results (they are evaluated there).</p>
+<p><b>Shear locking:</b> first-order <b>fully-integrated quadrilaterals (Q4)</b> cannot represent pure bending — they develop spurious shear strain and become far too stiff. Cure: use <b>second-order (quadratic) elements</b>, or <b>reduced integration</b>.</p>
+<p><b>Hourglassing:</b> <b>reduced (single-point) integration</b> under-integrates the element, leaving zero-energy deformation modes (the mesh deforms in an "hourglass" pattern at no strain-energy cost). Cure: hourglass control / stabilization, or full integration. So the two defects are opposite trade-offs of the integration scheme.</p>
+<div class="formula"><span class="eq">[K] = ∫ Bᵀ D B dV ≈ Σ wᵢ · Bᵀ D B |(ξᵢ)</span>
+<span class="term">B = strain–displacement matrix (derivatives of N)</span>
+<span class="term">ξᵢ, wᵢ = Gauss point locations and weights; too few → hourglass, too many on linear quads → locking in bending</span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<text x="80" y="24" fill="#ff6b6b" font-size="11" text-anchor="middle">Shear locking</text>
+<path d="M30 110 Q80 60 130 110" fill="none" stroke="#6b7785" stroke-dasharray="4 3" stroke-width="1.5"/>
+<rect x="40" y="80" width="80" height="30" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+<text x="80" y="132" fill="#9aa7b6" font-size="10" text-anchor="middle">too stiff in bending</text>
+<text x="280" y="24" fill="#ffc861" font-size="11" text-anchor="middle">Hourglassing</text>
+<polygon points="240,80 320,80 300,110 220,110" fill="none" stroke="#ffc861" stroke-width="2"/>
+<line x1="230" y1="95" x2="310" y2="95" stroke="#ffc861" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="270" y="132" fill="#9aa7b6" font-size="10" text-anchor="middle">zero-energy mode</text>
+</svg><div class="cap">Linear quad + full integration → locks (over-stiff). Linear quad + reduced integration → hourglass (spurious soft mode).</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Cantilever in bending, one row of Q4 elements:</b> full integration predicts a tip deflection ~3–5× too small (locked). Switching to reduced integration recovers the correct deflection but may need hourglass control; using quadratic Q8 elements solves it cleanly with no stabilization.</div>`},
+
+axi:{t:"Axisymmetric problems & rotating disks",h:`
+<h2>Axisymmetric problems</h2>
+<div class="lead">Rotating disks/cylinders, thick vs thin walls (Mariotte), Grammel.</div>
+<h3>Theory</h3>
+<p>For a body of revolution with axisymmetric loads, stresses depend only on radius r. The general stress field contains a constant C₂ multiplying a <b>1/r²</b> term. In a <b>solid</b> disk that term would be infinite at the centre, so <b>C₂ = 0</b> to keep stresses finite — at the centre σ<sub>r</sub> = σ<sub>θ</sub>. In an <b>annular</b> (holed) disk C₂ ≠ 0 and the <b>hoop stress peaks at the inner radius (bore)</b>; the radial stress is zero at both free edges. A small central hole roughly <b>doubles</b> the solid-disk centre stress.</p>
+<p><b>Thin wall – Mariotte:</b> uniform hoop stress σ<sub>θ</sub> = pD/2t (only valid for D/t ≳ 10). <b>Thick wall – Lamé/closed-form:</b> σ<sub>θ</sub> varies through the thickness and is valid for any thickness. <b>Grammel's method</b> splits the body into ring domains linked by equilibrium + compatibility (handles variable thickness, rotation, shrink-fit); the elastic solution is invalid once plasticity appears.</p>
+<div class="formula"><span class="eq">σ<sub>θ</sub>(r) = A + B/r² + (rotational term) ;   F<sub>c</sub> = m·r·ω²</span>
+<span class="term">A, B = constants from boundary conditions (B≡C₂; B=0 for a solid disk)</span>
+<span class="term">F<sub>c</sub> = centrifugal force per blade; ω = angular speed [rad/s]; r in metres</span>
+<span class="term">Mariotte (thin): σ<sub>θ</sub> = pD/2t ; σ<sub>ax</sub> = pD/4t</span></div>
+<div class="fig"><svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">
+<circle cx="90" cy="80" r="55" fill="none" stroke="#cdd6e0" stroke-width="2"/>
+<circle cx="90" cy="80" r="16" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+<text x="90" y="84" fill="#ff6b6b" font-size="9" text-anchor="middle">σθ max</text>
+<path d="M90 80 m0 -55 a55 55 0 0 1 18 4" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<text x="90" y="150" fill="#9aa7b6" font-size="10" text-anchor="middle">annular disk (ω)</text>
+<line x1="185" y1="130" x2="185" y2="30" stroke="#6b7785"/><line x1="185" y1="130" x2="345" y2="130" stroke="#6b7785"/>
+<text x="178" y="30" fill="#9aa7b6" font-size="9" text-anchor="end">σ</text><text x="345" y="144" fill="#9aa7b6" font-size="9">r</text>
+<path d="M200 55 C 240 70, 300 100, 340 105" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+<text x="300" y="60" fill="#ff6b6b" font-size="10">σθ (hoop)</text>
+<path d="M200 130 C 250 95, 300 95, 340 130" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<text x="270" y="120" fill="#4ea1ff" font-size="10">σr (=0 at edges)</text>
+</svg><div class="cap">Hoop stress is maximum at the bore and drives the design; radial stress vanishes at both free radii.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Thin pressure vessel, p=8.5 MPa, D=80 mm, t=3 mm:</b> Mariotte gives σ<sub>θ</sub> = pD/2t = 8.5·80/(2·3) = <b>113 MPa</b> and σ<sub>ax</sub> = pD/4t = <b>57 MPa</b>. Since D/t ≈ 27 ≫ 10, the thin-wall approximation is justified.</div>`},
+
+pbend:{t:"Plasticity in bending & notches",h:`
+<h2>Plasticity in bending</h2>
+<div class="lead">First yield → full plasticization, shape factor, residual stress.</div>
+<h3>Theory</h3>
+<p>Bending stress is largest at the outer fibre, so yielding <b>starts at the surface</b> and spreads inward; an <b>elastic core stays around the neutral axis</b> (where σ = 0) until the section is fully plastic. The section is NOT instantly fully plastic when the surface first yields.</p>
+<p>At <b>full plasticization</b> the stress is two uniform blocks: +σ<sub>ys</sub> (tension half) and −σ<sub>ys</sub> (compression half). The ratio M<sub>f</sub>/M<sub>i</sub> is the <b>shape factor</b> = 1.5 for a rectangle (≈1.7 for a circle).</p>
+<p><b>Residual stress:</b> unloading is elastic. Subtracting the linear elastic spring-back from the partly-plastic state leaves <b>compressive residual stress at fibres that yielded in tension</b> — the beneficial mechanism behind overstraining and shot-peening.</p>
+<div class="formula"><span class="eq">M<sub>i</sub> = (2/3)·σ<sub>ys</sub>·t·c²   ;   M<sub>f</sub> = 1.5·M<sub>i</sub>  (rectangle)</span>
+<span class="term">M<sub>i</sub> = first-yield moment; M<sub>f</sub> = fully-plastic moment</span>
+<span class="term">t = width, c = h/2 = half-height, σ<sub>ys</sub> = yield stress</span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<g><line x1="55" y1="20" x2="55" y2="130" stroke="#6b7785"/><text x="55" y="145" fill="#9aa7b6" font-size="9" text-anchor="middle">first yield</text>
+<polygon points="55,20 85,20 55,75" fill="none" stroke="#3ecf8e" stroke-width="2"/>
+<polygon points="55,130 25,130 55,75" fill="none" stroke="#3ecf8e" stroke-width="2"/></g>
+<g><line x1="180" y1="20" x2="180" y2="130" stroke="#6b7785"/><text x="180" y="145" fill="#9aa7b6" font-size="9" text-anchor="middle">partial</text>
+<polygon points="180,20 205,20 205,55 180,75" fill="none" stroke="#ffc861" stroke-width="2"/>
+<polygon points="180,130 155,130 155,95 180,75" fill="none" stroke="#ffc861" stroke-width="2"/>
+<circle cx="180" cy="75" r="2" fill="#cdd6e0"/><text x="215" y="72" fill="#9aa7b6" font-size="8">σ=0 core</text></g>
+<g><line x1="305" y1="20" x2="305" y2="130" stroke="#6b7785"/><text x="305" y="145" fill="#9aa7b6" font-size="9" text-anchor="middle">full plastic</text>
+<rect x="305" y="20" width="28" height="55" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+<rect x="277" y="75" width="28" height="55" fill="none" stroke="#ff6b6b" stroke-width="2"/></g>
+</svg><div class="cap">Stress profile: linear (first yield) → trapezoidal with elastic core → two ±σ<sub>ys</sub> blocks (full plasticization).</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Rectangle b×h:</b> elastic section modulus W=bh²/6, so M<sub>i</sub>=σ<sub>ys</sub>bh²/6. Fully plastic, the two blocks give M<sub>f</sub>=σ<sub>ys</sub>bh²/4. Ratio M<sub>f</sub>/M<sub>i</sub> = (bh²/4)/(bh²/6) = <b>1.5</b> → 50% extra moment capacity beyond first yield.</div>`},
+
+neuber:{t:"Neuber's rule (local strain at notches)",h:`
+<h2>Neuber's rule</h2>
+<div class="lead">Local elastic-plastic stress & strain at a notch root.</div>
+<h3>Theory</h3>
+<p>The elastic stress-concentration factor K<sub>t</sub> overestimates the real stress once the notch root yields. Neuber states that the <b>geometric mean of the actual stress and strain concentration factors equals K<sub>t</sub></b>: K<sub>σ</sub>·K<sub>ε</sub> = K<sub>t</sub>². Combined with the material σ–ε curve it gives the true local stress and strain during <b>loading and unloading</b>, even with localized plasticity.</p>
+<div class="formula"><span class="eq">σ·ε = K<sub>t</sub>²·σ²<sub>nom</sub> / E</span>
+<span class="term">σ, ε = true local stress and strain at the notch root (on the σ–ε curve)</span>
+<span class="term">K<sub>t</sub> = theoretical (elastic) stress-concentration factor</span>
+<span class="term">σ<sub>nom</sub> = nominal stress (net section); E = Young's modulus</span></div>
+<p>Graphically, σ·ε = const is a <b>hyperbola</b>; its intersection with the σ–ε curve is the notch-root state. Unloading: Δσ = E·Δε while Δσ ≤ 2σ<sub>ys</sub> (then it saturates), giving residual notch stresses.</p>
+<div class="fig"><svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">
+<line x1="40" y1="135" x2="340" y2="135" stroke="#6b7785"/><line x1="40" y1="135" x2="40" y2="20" stroke="#6b7785"/>
+<text x="36" y="20" fill="#9aa7b6" font-size="10" text-anchor="end">σ</text><text x="340" y="150" fill="#9aa7b6" font-size="10">ε</text>
+<path d="M40 135 L110 50 C150 35 250 28 330 26" fill="none" stroke="#cdd6e0" stroke-width="2"/>
+<text x="250" y="22" fill="#cdd6e0" font-size="10">σ–ε curve</text>
+<path d="M70 135 C 120 70, 200 45, 330 40" fill="none" stroke="#4ea1ff" stroke-width="2" stroke-dasharray="5 3"/>
+<text x="150" y="110" fill="#4ea1ff" font-size="10">σε = K&#8348;²σ²/E</text>
+<circle cx="150" cy="49" r="4" fill="#ff6b6b"/><text x="165" y="50" fill="#ff6b6b" font-size="10">notch state</text>
+</svg><div class="cap">The Neuber hyperbola meets the σ–ε curve at the true notch-root (σ, ε) — well above the nominal stress but below K<sub>t</sub>·σ<sub>nom</sub>.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>K<sub>t</sub>=3, σ<sub>nom</sub>=150 MPa, E=206 GPa:</b> elastic prediction K<sub>t</sub>σ<sub>nom</sub>=450 MPa (impossible if σ<sub>ys</sub>=350). Neuber: σ·ε = 9·150²/206000 = 0.983 MPa. Intersecting this hyperbola with the real σ–ε curve might give e.g. σ≈360 MPa, ε≈0.0027 — a realistic yielded state used for local-strain fatigue life.</div>`},
+
+kt:{t:"Stress concentration factor Kt",h:`
+<h2>Stress concentration (K<sub>t</sub>)</h2>
+<div class="lead">How holes and notches amplify stress.</div>
+<h3>Theory</h3>
+<p>A geometric discontinuity forces the stress flow lines together and raises the local peak stress: σ<sub>max</sub> = K<sub>t</sub>·σ<sub>nom</sub>. K<sub>t</sub> is purely geometric (elastic).</p>
+<p>Classic results (infinite plate): a <b>small circular hole in uniaxial tension → K<sub>t</sub> = 3</b>; under <b>equibiaxial</b> tension K<sub>t</sub>=2; an <b>elliptical</b> hole → K<sub>t</sub>=1+2(a/b) (sharper = higher). Under <b>pure shear</b> the hole sees +τ and −τ principal stresses at ±45°, each amplified by 3 and superposed → σ<sub>max</sub> = <b>4τ</b>.</p>
+<div class="formula"><span class="eq">σ<sub>max</sub> = K<sub>t</sub>·σ<sub>nom</sub> ;  σ<sub>nom</sub> = F / [(W−d)·t]</span>
+<span class="term">σ<sub>nom</sub> = nominal stress on the NET section (width W minus hole d, thickness t)</span>
+<span class="term">K<sub>t</sub> = 3 (round hole, uniaxial); 1+2a/b (ellipse, a ⟂ load)</span></div>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<rect x="40" y="35" width="220" height="70" fill="none" stroke="#6b7785"/>
+<circle cx="150" cy="70" r="18" fill="none" stroke="#cdd6e0" stroke-width="2"/>
+<line x1="10" y1="70" x2="40" y2="70" stroke="#4ea1ff" stroke-width="2"/><polygon points="40,70 32,66 32,74" fill="#4ea1ff"/>
+<line x1="260" y1="70" x2="290" y2="70" stroke="#4ea1ff" stroke-width="2"/><polygon points="290,70 282,66 282,74" fill="#4ea1ff"/>
+<line x1="150" y1="52" x2="150" y2="44" stroke="#ff6b6b" stroke-width="3"/><line x1="150" y1="88" x2="150" y2="96" stroke="#ff6b6b" stroke-width="3"/>
+<text x="150" y="125" fill="#ff6b6b" font-size="10" text-anchor="middle">peak = 3·σ at hole edge</text>
+</svg><div class="cap">Stress is highest at the hole edge perpendicular to the load (the "poles"), three times the far-field tension.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Plate in pure shear τ=100 MPa with a hole:</b> resolve into +100 (tension) and −100 (compression) at 45°. Each is amplified by K<sub>t</sub>=3; at the critical edge they add: σ<sub>max</sub> = 3·100 + 3·100 = <b>400 MPa</b>.</div>`},
+
+sn:{t:"Fatigue limit & the S-N (Wöhler) curve",h:`
+<h2>S-N (Wöhler) curve & fatigue limit</h2>
+<div class="lead">Stress amplitude vs life; the endurance knee; the staircase test.</div>
+<h3>Theory</h3>
+<p>Plotting stress amplitude σ<sub>a</sub> vs cycles-to-failure N (log-log) gives the <b>Wöhler curve</b>. Many <b>steels show a fatigue (endurance) limit</b> — a horizontal asymptote near <b>10⁶–10⁷ cycles</b>; below it the part nominally lasts forever. Many aluminium alloys have <b>no</b> true limit (a conventional value is set at ~10⁷–10⁸).</p>
+<p>The fatigue limit is a <b>statistical</b> quantity (scatter), so a safety factor / survival probability is applied. The <b>Stair-Case method</b> estimates the limit at <b>50% failure probability</b> (and its standard deviation, hence other probabilities) by testing each specimen just above/below the previous level.</p>
+<div class="formula"><span class="eq">σ<sub>a</sub> = A·(N<sub>f</sub>)<sup>b</sup>   ⟹   N<sub>f</sub> = (σ<sub>a</sub>/A)<sup>1/b</sup></span>
+<span class="term">σ<sub>a</sub> = applied stress amplitude; N<sub>f</sub> = cycles to failure</span>
+<span class="term">A, b = Wöhler (Basquin) coefficients (b < 0); σ′<sub>e</sub> ≈ 0.5·UTS (bending, smooth steel)</span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<line x1="45" y1="125" x2="340" y2="125" stroke="#6b7785"/><line x1="45" y1="125" x2="45" y2="20" stroke="#6b7785"/>
+<text x="40" y="22" fill="#9aa7b6" font-size="10" text-anchor="end">σa</text><text x="335" y="140" fill="#9aa7b6" font-size="10">log N</text>
+<path d="M60 35 C 130 55, 200 95, 250 105 L 335 107" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<line x1="250" y1="105" x2="335" y2="105" stroke="#3ecf8e" stroke-width="2" stroke-dasharray="5 3"/>
+<text x="300" y="98" fill="#3ecf8e" font-size="10">fatigue limit σ′e</text>
+<line x1="250" y1="125" x2="250" y2="105" stroke="#6b7785" stroke-dasharray="2 2"/>
+<text x="250" y="140" fill="#9aa7b6" font-size="9" text-anchor="middle">10⁶–10⁷</text>
+</svg><div class="cap">The curve flattens at the endurance knee; below σ′<sub>e</sub> a steel survives "infinite" cycles.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>A=991 MPa, b=−0.114, σ<sub>a</sub>=300 MPa:</b> N<sub>f</sub> = (300/991)^(1/−0.114) = (0.303)^(−8.77) ≈ <b>1.8×10⁴ cycles</b>. Dropping σ<sub>a</sub> to the fatigue limit pushes N<sub>f</sub> past the 10⁷ knee → effectively infinite life.</div>`},
+
+goodman:{t:"Mean stress & the Goodman diagram",h:`
+<h2>Mean-stress effect (Goodman)</h2>
+<div class="lead">Why a tensile mean stress eats into fatigue strength.</div>
+<h3>Theory</h3>
+<p>Fatigue depends not only on amplitude σ<sub>a</sub> but on mean stress σ<sub>m</sub>. A <b>tensile</b> mean stress <b>reduces</b> the allowable amplitude; a compressive mean stress is beneficial; a mean shear stress matters little until large. The <b>Goodman line</b> connects the fatigue limit S<sub>f</sub> (on the amplitude axis) to the <b>UTS</b> S<sub>u</sub> (on the mean-stress axis).</p>
+<div class="formula"><span class="eq">σ<sub>a</sub>/S<sub>f</sub> + σ<sub>m</sub>/S<sub>u</sub> = 1</span>
+<span class="term">σ<sub>a</sub> = stress amplitude; σ<sub>m</sub> = mean stress</span>
+<span class="term">S<sub>f</sub> = fatigue limit (fully reversed, R=−1); S<sub>u</sub> = ultimate tensile strength</span>
+<span class="term">Soderberg uses S<sub>y</sub> instead of S<sub>u</sub> (more conservative); Gerber uses a parabola</span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<line x1="45" y1="120" x2="340" y2="120" stroke="#6b7785"/><line x1="45" y1="120" x2="45" y2="20" stroke="#6b7785"/>
+<text x="40" y="22" fill="#9aa7b6" font-size="10" text-anchor="end">σa</text><text x="333" y="135" fill="#9aa7b6" font-size="10">σm</text>
+<line x1="45" y1="40" x2="320" y2="120" stroke="#4ea1ff" stroke-width="2"/>
+<text x="40" y="42" fill="#3ecf8e" font-size="10" text-anchor="end">Sf</text>
+<text x="320" y="135" fill="#ffc861" font-size="10" text-anchor="middle">Su</text>
+<circle cx="150" cy="86" r="4" fill="#ff6b6b"/><text x="158" y="84" fill="#ff6b6b" font-size="9">safe if below line</text>
+<text x="120" y="55" fill="#9aa7b6" font-size="9">Goodman line</text>
+</svg><div class="cap">Any (σ<sub>m</sub>, σ<sub>a</sub>) point below the line is safe; the allowable amplitude shrinks linearly to zero as σ<sub>m</sub> → S<sub>u</sub>.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>S<sub>f</sub>=250, S<sub>u</sub>=550 MPa, σ<sub>m</sub>=200 MPa:</b> allowable amplitude = S<sub>f</sub>(1 − σ<sub>m</sub>/S<sub>u</sub>) = 250·(1 − 200/550) = <b>159 MPa</b>. The tensile mean stress cut the usable amplitude by ~36%.</div>`},
+
+kf:{t:"Fatigue notch factor Kf",h:`
+<h2>Fatigue notch factor (K<sub>f</sub>)</h2>
+<div class="lead">Why the fatigue notch effect is smaller than K<sub>t</sub>.</div>
+<h3>Theory</h3>
+<p>Fatigue strength reflects the stress <b>averaged over a small finite volume of material</b> (a grain-sized process zone), not the sharp elastic peak. So the <b>fatigue</b> notch factor K<sub>f</sub> ≤ K<sub>t</sub>: K<sub>f</sub> = (smooth-specimen fatigue limit)/(notched fatigue limit). For very sharp notches K<sub>t</sub> grows without bound but K<sub>f</sub> saturates.</p>
+<p><b>Global approach:</b> use nominal stress and apply K<sub>f</sub> (on the alternating component). <b>Local approach:</b> use the real local stress (strain gauge or FEM) which already contains the notch effect, so K<sub>f</sub> is <b>not</b> applied again.</p>
+<div class="formula"><span class="eq">K<sub>f</sub> = 1 + q·(K<sub>t</sub> − 1) ,   q = 1 / (1 + a/r)</span>
+<span class="term">q = notch sensitivity (0 = insensitive → K<sub>f</sub>=1; 1 = fully sensitive → K<sub>f</sub>=K<sub>t</sub>)</span>
+<span class="term">r = notch root radius; a = material characteristic length (≈ f(UTS))</span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<line x1="45" y1="120" x2="340" y2="120" stroke="#6b7785"/><line x1="45" y1="120" x2="45" y2="20" stroke="#6b7785"/>
+<text x="40" y="22" fill="#9aa7b6" font-size="9" text-anchor="end">factor</text><text x="320" y="135" fill="#9aa7b6" font-size="9">1/r (sharper →)</text>
+<path d="M50 110 C 150 60, 250 35, 330 28" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+<text x="250" y="34" fill="#ff6b6b" font-size="10">Kt (unbounded)</text>
+<path d="M50 110 C 150 85, 250 78, 330 76" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<text x="250" y="92" fill="#4ea1ff" font-size="10">Kf (saturates)</text>
+</svg><div class="cap">As the notch sharpens, K<sub>t</sub> keeps rising but K<sub>f</sub> levels off — small notches are less damaging than K<sub>t</sub> implies.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>K<sub>t</sub>=3.5, q=0.8:</b> K<sub>f</sub> = 1 + 0.8·(3.5−1) = <b>3.0</b>. In the global approach the allowable alternating stress is σ′<sub>e</sub>/K<sub>f</sub>; if you instead measured the strain at the notch root, you'd use that value directly with K<sub>f</sub>=1.</div>`},
+
+multi:{t:"Multiaxial fatigue: Sines & Gough-Pollard",h:`
+<h2>Multiaxial fatigue criteria</h2>
+<div class="lead">Combined bending + torsion on shafts.</div>
+<h3>Theory</h3>
+<p><b>Sines</b> compares the amplitude of the octahedral shear (≈ von Mises of the alternating stresses) to the fatigue limit, <b>reduced by the mean hydrostatic stress</b> (first stress invariant). A <b>constant</b> torque adds no alternating shear, so Sines effectively ignores its fatigue effect; mean shear has no influence in Sines.</p>
+<p><b>Gough-Pollard</b> is the empirical <b>ellipse-quadrant</b> fit for ductile shafts under in-phase bending + torsion.</p>
+<div class="formula"><span class="eq">(σ<sub>a</sub>/σ<sub>lim</sub>)² + (τ<sub>a</sub>/τ<sub>lim</sub>)² = 1   (Gough-Pollard)</span>
+<span class="term">σ<sub>a</sub>, τ<sub>a</sub> = bending and torsional stress amplitudes</span>
+<span class="term">σ<sub>lim</sub> = 0.5·UTS·m<sub>s</sub>·m<sub>d</sub>/K<sub>f</sub> ; τ<sub>lim</sub> = 0.3·UTS·m<sub>s</sub>·m<sub>d</sub>/K<sub>f</sub></span></div>
+<div class="formula"><span class="eq">η = σ′<sub>e</sub> / (σ*<sub>VM,A</sub> − σ*<sub>m</sub>)   (Sines)  ,   σ*<sub>VM,A</sub> = √(σ<sub>A</sub>²+3τ<sub>A</sub>²)</span>
+<span class="term">σ*<sub>VM,A</sub> = von Mises of the alternating components; the mean term lowers the available limit</span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<line x1="45" y1="120" x2="340" y2="120" stroke="#6b7785"/><line x1="45" y1="120" x2="45" y2="20" stroke="#6b7785"/>
+<text x="40" y="24" fill="#9aa7b6" font-size="10" text-anchor="end">τa</text><text x="332" y="135" fill="#9aa7b6" font-size="10">σa</text>
+<path d="M45 35 A 270 85 0 0 1 315 120" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<text x="40" y="36" fill="#ffc861" font-size="9" text-anchor="end">τlim</text>
+<text x="312" y="135" fill="#ffc861" font-size="9" text-anchor="middle">σlim</text>
+<circle cx="150" cy="92" r="4" fill="#3ecf8e"/><text x="158" y="90" fill="#3ecf8e" font-size="9">safe (inside)</text>
+<circle cx="270" cy="55" r="4" fill="#ff6b6b"/><text x="225" y="50" fill="#ff6b6b" font-size="9">unsafe</text>
+</svg><div class="cap">Gough-Pollard ellipse quadrant: a (σ<sub>a</sub>, τ<sub>a</sub>) point inside the ellipse survives.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Shaft, σ<sub>a</sub>=120, τ<sub>a</sub>=60 MPa, σ<sub>lim</sub>=200, τ<sub>lim</sub>=120:</b> (120/200)² + (60/120)² = 0.36 + 0.25 = 0.61 < 1 → <b>safe</b>, with margin √(1/0.61) ≈ 1.28.</div>`},
+
+pss:{t:"Plane stress vs plane strain",h:`
+<h2>Plane stress vs plane strain</h2>
+<div class="lead">The single idea behind 2D FEM models AND crack-tip behaviour.</div>
+<h3>Theory</h3>
+<p>Both are 2D idealizations requiring <b>in-plane loading</b>.</p>
+<p><b>Plane stress</b> — a <b>thin</b> body (e.g. a plate): the through-thickness stress σ<sub>z</sub> ≈ 0 (free surfaces), but it can strain in z. <b>Plane strain</b> — a <b>thick</b>/constrained body: ε<sub>z</sub> ≈ 0, which forces a through-thickness stress σ<sub>z</sub> = ν(σ<sub>x</sub>+σ<sub>y</sub>) and a triaxial, more constrained state.</p>
+<p>At a <b>crack tip</b>, the thin free surfaces are in plane stress (larger plastic zone) while the thick interior is in plane strain (smaller zone, more brittle). This controls the plastic-zone shape and why thick sections are more prone to brittle fracture.</p>
+<div class="formula"><span class="eq">Plane stress: σ<sub>z</sub> = 0 ,  ε<sub>z</sub> ≠ 0</span>
+<span class="eq">Plane strain: ε<sub>z</sub> = 0 ,  σ<sub>z</sub> = ν(σ<sub>x</sub> + σ<sub>y</sub>)</span>
+<span class="term">ν = Poisson's ratio; the plane-strain constraint raises triaxiality and suppresses yielding</span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<rect x="40" y="55" width="90" height="50" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<text x="85" y="48" fill="#4ea1ff" font-size="10" text-anchor="middle">thin → plane stress</text>
+<text x="85" y="125" fill="#9aa7b6" font-size="9" text-anchor="middle">σz = 0</text>
+<rect x="220" y="35" width="90" height="90" fill="none" stroke="#ffc861" stroke-width="2"/>
+<text x="265" y="28" fill="#ffc861" font-size="10" text-anchor="middle">thick → plane strain</text>
+<text x="265" y="142" fill="#9aa7b6" font-size="9" text-anchor="middle">εz = 0, σz = ν(σx+σy)</text>
+<line x1="220" y1="80" x2="310" y2="80" stroke="#6b7785" stroke-dasharray="3 3"/>
+</svg><div class="cap">Thin bodies relieve the out-of-plane stress; thick bodies relieve the out-of-plane strain instead, becoming triaxial.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Modelling choice:</b> a thin gusset plate loaded in its plane → use plane-stress elements. A long dam cross-section or a thick cylinder far from its ends → plane-strain elements. Same geometry sketch, different physics, different stiffness.</div>`},
+
+frac:{t:"LEFM: K, G and Griffith",h:`
+<h2>Linear Elastic Fracture Mechanics</h2>
+<div class="lead">The stress intensity factor K, energy release rate G, Griffith.</div>
+<h3>Theory</h3>
+<p>Near a crack tip the stress field is governed by a single parameter, the <b>stress intensity factor K</b>, which bundles load, geometry and crack size. <b>Static</b> fracture occurs when K reaches the material toughness (K ≥ K<sub>IC</sub>). The <b>energy</b> (Griffith) approach is global: the crack grows when the <b>strain energy release rate G</b> (energy freed per unit crack advance) reaches the material's fracture resistance G<sub>c</sub> (the R-curve value).</p>
+<div class="formula"><span class="eq">K = β·σ·√(πa) ;   G = K²/E′ ;   fracture when K ≥ K<sub>IC</sub> (G ≥ G<sub>c</sub>)</span>
+<span class="term">σ = remote stress; a = crack length (half-length for a central crack)</span>
+<span class="term">β = geometry factor (1.12 edge crack, 1.0 central crack in infinite plate)</span>
+<span class="term">E′ = E (plane stress) or E/(1−ν²) (plane strain)</span></div>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<rect x="60" y="25" width="170" height="90" fill="none" stroke="#6b7785"/>
+<line x1="60" y1="70" x2="120" y2="70" stroke="#ff6b6b" stroke-width="3"/>
+<text x="90" y="64" fill="#ff6b6b" font-size="10" text-anchor="middle">a</text>
+<path d="M120 70 q25 -18 45 -25" stroke="#4ea1ff" fill="none" stroke-width="1.5"/>
+<path d="M120 70 q25 18 45 25" stroke="#4ea1ff" fill="none" stroke-width="1.5"/>
+<text x="175" y="50" fill="#4ea1ff" font-size="10">K field</text>
+<line x1="145" y1="10" x2="145" y2="24" stroke="#cdd6e0" stroke-width="2"/><line x1="145" y1="116" x2="145" y2="130" stroke="#cdd6e0" stroke-width="2"/>
+<text x="300" y="55" fill="#9aa7b6" font-size="11" text-anchor="middle">K=βσ√πa</text>
+<text x="300" y="78" fill="#9aa7b6" font-size="11" text-anchor="middle">≥ K&#8407;c → break</text>
+</svg><div class="cap">One parameter K characterises the whole crack-tip field; compare it to the material's K<sub>IC</sub>.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Central crack 2a=8 mm (a=4 mm), σ=60 MPa, β=1.12:</b> K = 1.12·60·√(π·0.004) = <b>7.5 MPa√m</b>. If K<sub>IC</sub>=12 MPa√m, the crack is still stable (K < K<sub>IC</sub>); the critical size is a<sub>cr</sub> = (1/π)(K<sub>IC</sub>/(βσ))² ≈ 10 mm.</div>`},
+
+pzone:{t:"Crack-tip plastic zone",h:`
+<h2>Crack-tip plastic zone</h2>
+<div class="lead">Why it is bigger in plane stress and dog-bone shaped.</div>
+<h3>Theory</h3>
+<p>Real materials yield at the crack tip over a small <b>plastic zone</b> of radius r<sub>p</sub>. The triaxial constraint of <b>plane strain</b> suppresses yielding, so r<sub>p</sub> is about <b>1/3</b> of the plane-stress value. Across the thickness the zone is therefore large at the free surfaces (plane stress) and small in the interior (plane strain) — a <b>"dog-bone"</b> shape. As long as r<sub>p</sub> ≪ crack/section size, LEFM (small-scale yielding) stays valid.</p>
+<div class="formula"><span class="eq">r<sub>p</sub> ≈ (1/2π)(K/σ<sub>ys</sub>)²  (plane stress)</span>
+<span class="eq">r<sub>p</sub> ≈ (1/6π)(K/σ<sub>ys</sub>)²  (plane strain)</span>
+<span class="term">K = stress intensity factor; σ<sub>ys</sub> = yield strength</span></div>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<rect x="70" y="30" width="150" height="80" fill="none" stroke="#6b7785"/>
+<text x="145" y="22" fill="#9aa7b6" font-size="9" text-anchor="middle">thickness →</text>
+<ellipse cx="145" cy="30" rx="22" ry="9" fill="#ff6b6b" opacity=".5"/>
+<ellipse cx="145" cy="110" rx="22" ry="9" fill="#ff6b6b" opacity=".5"/>
+<ellipse cx="145" cy="70" rx="9" ry="9" fill="#ffc861" opacity=".6"/>
+<text x="250" y="34" fill="#ff6b6b" font-size="9">surface: plane stress (big)</text>
+<text x="250" y="74" fill="#ffc861" font-size="9">core: plane strain (small)</text>
+</svg><div class="cap">Plastic zone size varies through the thickness → larger near the surfaces, giving the dog-bone profile.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>K=20 MPa√m, σ<sub>ys</sub>=500 MPa:</b> plane stress r<sub>p</sub> = (1/2π)(20/500)² = 2.5×10⁻⁴ m = 0.25 mm; plane strain ≈ 0.085 mm — three times smaller, confirming the interior is more constrained and brittle.</div>`},
+
+tough:{t:"Fracture toughness: KIC, Kc, R-curve",h:`
+<h2>Fracture toughness validity</h2>
+<div class="lead">K<sub>IC</sub> vs K<sub>c</sub>, the thickness rule, and R-curves.</div>
+<h3>Theory</h3>
+<p><b>K<sub>IC</sub></b> is the <b>plane-strain</b> fracture toughness — a thickness-independent <b>material</b> property (lower bound). <b>K<sub>c</sub></b> is the plane-stress critical value, which <b>depends on thickness</b>, so it is only transferable to a component of the same thickness as the test specimen. The ASTM <b>size requirement</b> guarantees enough thickness for valid (plane-strain) K<sub>IC</sub> testing.</p>
+<div class="formula"><span class="eq">B ≥ 2.5·(K<sub>IC</sub>/σ<sub>ys</sub>)²</span>
+<span class="term">B = specimen thickness; ensures predominant plane-strain constraint</span>
+<span class="term">σ<sub>ys</sub> = yield strength; if too thin you measure a thickness-dependent K<sub>c</sub> instead</span></div>
+<p><b>R-curve:</b> the material's fracture resistance R vs crack extension. <b>Brittle</b> materials → flat R-curve (single G<sub>c</sub>). <b>Ductile/thin</b> → <b>rising</b> R-curve: resistance increases as the crack extends, allowing some stable tearing before instability (instability = tangency of the driving-force and R curves).</p>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<line x1="45" y1="115" x2="200" y2="115" stroke="#6b7785"/><line x1="45" y1="115" x2="45" y2="20" stroke="#6b7785"/>
+<text x="40" y="22" fill="#9aa7b6" font-size="9" text-anchor="end">Kc</text><text x="195" y="130" fill="#9aa7b6" font-size="9">thickness B</text>
+<path d="M50 35 C 90 70, 140 100, 195 105" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<line x1="120" y1="105" x2="195" y2="105" stroke="#3ecf8e" stroke-dasharray="4 3"/>
+<text x="160" y="98" fill="#3ecf8e" font-size="9">→ KIC (plateau)</text>
+<line x1="235" y1="115" x2="345" y2="115" stroke="#6b7785"/><line x1="235" y1="115" x2="235" y2="20" stroke="#6b7785"/>
+<text x="235" y="130" fill="#9aa7b6" font-size="9">Δa</text>
+<path d="M240 95 C 280 60, 320 45, 343 40" fill="none" stroke="#ffc861" stroke-width="2"/>
+<text x="300" y="40" fill="#ffc861" font-size="9">R-curve (ductile)</text>
+</svg><div class="cap">Toughness falls with thickness toward the plane-strain plateau K<sub>IC</sub>; ductile materials show a rising R-curve.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>K<sub>IC</sub>=40 MPa√m, σ<sub>ys</sub>=300 MPa:</b> required thickness B ≥ 2.5·(40/300)² = 2.5·0.0178 = <b>0.044 m = 44 mm</b>. A 10 mm coupon would give a non-conservative, thickness-dependent K<sub>c</sub>, not the true K<sub>IC</sub>.</div>`},
+
+growth:{t:"Crack growth laws (Paris, Walker, Forman)",h:`
+<h2>Fatigue crack growth</h2>
+<div class="lead">da/dN vs ΔK and the three regions.</div>
+<h3>Theory</h3>
+<p>Under cyclic load a crack grows by da/dN per cycle, driven by the <b>SIF range ΔK</b>. The da/dN–ΔK curve (log-log) is sigmoidal with three regions: <b>I</b> threshold ΔK<sub>th</sub> (no growth below it); <b>II</b> stable Paris region (straight line); <b>III</b> instability as K<sub>max</sub> → K<sub>c</sub>.</p>
+<p><b>Paris</b> models only Region II and ignores the mean stress R. <b>Walker</b> adds the R-effect via γ; <b>Forman</b> adds Region III instability (and R). Compression doesn't open the crack, so use ΔσK only on the tensile part (ΔK = β·Δσ·√(πa), with Δσ = σ<sub>max</sub> if R=0 or compressive).</p>
+<div class="formula"><span class="eq">Paris (R=0): da/dN = C·ΔK<sup>m</sup></span>
+<span class="eq">Walker (R≠0): da/dN = C·ΔK̄<sup>m</sup>, ΔK̄ = K<sub>max</sub>(1−R)<sup>γ</sup></span>
+<span class="term">C, m = material constants; R = σ<sub>min</sub>/σ<sub>max</sub>; γ = Walker exponent (R>0→γ>0)</span>
+<span class="term">Higher R → larger ΔK̄ → faster growth; Forman makes da/dN→∞ as K<sub>max</sub>→K<sub>c</sub></span></div>
+<div class="fig"><svg viewBox="0 0 360 150" xmlns="http://www.w3.org/2000/svg">
+<line x1="45" y1="125" x2="340" y2="125" stroke="#6b7785"/><line x1="45" y1="125" x2="45" y2="20" stroke="#6b7785"/>
+<text x="40" y="24" fill="#9aa7b6" font-size="9" text-anchor="end">log da/dN</text><text x="333" y="140" fill="#9aa7b6" font-size="9">log ΔK</text>
+<path d="M70 120 C 80 118, 90 95, 100 92" fill="none" stroke="#3ecf8e" stroke-width="2"/>
+<path d="M100 92 L 250 55" stroke="#4ea1ff" stroke-width="2"/>
+<path d="M250 55 C 270 50, 285 30, 290 22" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+<text x="80" y="135" fill="#3ecf8e" font-size="9">I: ΔKth</text>
+<text x="175" y="50" fill="#4ea1ff" font-size="9">II: Paris</text>
+<text x="285" y="48" fill="#ff6b6b" font-size="9" text-anchor="end">III: Kc</text>
+</svg><div class="cap">Region II is the straight Paris line; Walker/Forman extend the model to R-ratio and the Region-III instability.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>C=6.9×10⁻¹², m=3, ΔK from 7.5 MPa√m:</b> da/dN = 6.9×10⁻¹²·(7.5)³ ≈ 2.9×10⁻⁹ m/cycle. Integrating from a₀ to a<sub>cr</sub> gives the remaining life N<sub>f</sub> — the basis of damage-tolerant inspection intervals.</div>`},
+
+varamp:{t:"Variable amplitude: Miner, overloads, retardation",h:`
+<h2>Variable-amplitude loading</h2>
+<div class="lead">Miner's damage rule and overload retardation (Wheeler).</div>
+<h3>Theory</h3>
+<p><b>Palmgren-Miner</b> linear damage: failure when the summed cycle fractions reach 1. Basic Miner <b>ignores sequence</b>, but in reality a high-low sequence can fail at ΣD < 1 (and low-high at ΣD > 1). Rainflow counting is its standard companion.</p>
+<div class="formula"><span class="eq">D = Σ (n<sub>i</sub> / N<sub>i</sub>) = 1  at failure</span>
+<span class="term">n<sub>i</sub> = applied cycles at stress level i; N<sub>i</sub> = cycles-to-failure at that level (from Wöhler)</span></div>
+<p><b>Overload retardation:</b> a tensile overload creates a large crack-tip plastic zone; on unloading it leaves <b>compressive residual stresses</b> that <b>slow</b> later growth. The <b>Wheeler</b> model scales da/dN by a retardation factor based on the ratio of the current plastic zone to the overload plastic zone. A compressive <b>underload</b> does the opposite — it reduces closure and <b>accelerates</b> growth.</p>
+<div class="formula"><span class="eq">φ = ( r<sub>p,current</sub> / (a<sub>OL</sub> + r<sub>p,OL</sub> − a) )<sup>m</sup>   (Wheeler)</span>
+<span class="term">r<sub>p,current</sub> = current cycle's plastic zone; (a<sub>OL</sub>+r<sub>p,OL</sub>) = boundary reached by the overload zone</span></div>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<line x1="45" y1="115" x2="340" y2="115" stroke="#6b7785"/><line x1="45" y1="115" x2="45" y2="20" stroke="#6b7785"/>
+<text x="40" y="24" fill="#9aa7b6" font-size="9" text-anchor="end">a</text><text x="333" y="130" fill="#9aa7b6" font-size="9">N (cycles)</text>
+<path d="M50 105 L 160 70" stroke="#4ea1ff" stroke-width="2"/>
+<path d="M160 70 C 200 66, 235 64, 250 63" fill="none" stroke="#ffc861" stroke-width="2"/>
+<path d="M250 63 L 330 30" stroke="#4ea1ff" stroke-width="2"/>
+<line x1="160" y1="115" x2="160" y2="70" stroke="#6b7785" stroke-dasharray="3 3"/>
+<text x="160" y="128" fill="#ff6b6b" font-size="9" text-anchor="middle">overload</text>
+<text x="205" y="56" fill="#ffc861" font-size="9">retardation (slow)</text>
+</svg><div class="cap">After an overload the crack-growth curve flattens (slows) for a while, then resumes — extending life.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Two blocks:</b> 10⁴ cycles at a level with N₁=10⁵, then 2×10⁴ at N₂=2×10⁵. D = 10⁴/10⁵ + 2×10⁴/2×10⁵ = 0.1 + 0.1 = 0.2. Failure (D=1) needs 5× this spectrum — if sequence effects are negligible.</div>`},
+
+weld:{t:"Welded joints",h:`
+<h2>Welded joints</h2>
+<div class="lead">Butt vs fillet welds; how to check them.</div>
+<h3>Theory</h3>
+<p>A <b>full-penetration butt weld</b> restores the parent section, so it is checked like the base material with the <b>von Mises</b> equivalent stress. <b>Fillet welds</b> carry load only through their <b>throat</b> area and are checked on that throat with their own stress components (σ⊥, τ⊥, τ∥).</p>
+<p>When welding an H-beam (bending + shear) to a base plate, the contributions decouple: the <b>flange (horizontal) welds carry the bending moment</b> (they are far from the neutral axis), while the <b>web (vertical) welds carry the shear</b>. Brittle materials use the Galileo-Rankine (max normal stress) criterion instead of von Mises.</p>
+<div class="formula"><span class="eq">σ<sub>VM</sub> = √(σ² + 3τ²) ≤ σ<sub>adm</sub></span>
+<span class="term">σ, τ = normal and shear stress on the weld section (throat for fillets)</span>
+<span class="term">Galileo-Rankine (brittle): |σ<sub>I</sub>| ≤ UTS and |σ<sub>III</sub>| ≤ |UTS<sub>comp</sub>|</span></div>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<rect x="40" y="60" width="100" height="16" fill="none" stroke="#cdd6e0"/><rect x="140" y="60" width="100" height="16" fill="none" stroke="#cdd6e0"/>
+<rect x="135" y="58" width="10" height="20" fill="#4ea1ff" opacity=".6"/>
+<text x="140" y="100" fill="#4ea1ff" font-size="10" text-anchor="middle">butt (von Mises)</text>
+<line x1="285" y1="40" x2="285" y2="110" stroke="#cdd6e0" stroke-width="3"/><line x1="285" y1="110" x2="345" y2="110" stroke="#cdd6e0" stroke-width="3"/>
+<path d="M285 95 L 300 110" stroke="#3ecf8e" stroke-width="4"/>
+<text x="305" y="128" fill="#3ecf8e" font-size="10" text-anchor="middle">fillet (throat)</text>
+</svg><div class="cap">Butt weld ≈ parent metal (von Mises); fillet weld carries load across its diagonal throat only.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Butt weld, σ=120 MPa, τ=60 MPa, σ<sub>adm</sub>=240:</b> σ<sub>VM</sub> = √(120²+3·60²) = √(14400+10800) = 158.7 MPa. Safety factor η = 240/158.7 = <b>1.5</b>. <span class="cap">Note: weld questions were common in the 2022–23 exams and rarer recently.</span></div>`},
+
+shm:{t:"SHM & Digital Twins",h:`
+<h2>SHM & Digital Twins</h2>
+<div class="lead">Recent syllabus topic (2025–26).</div>
+<h3>Theory</h3>
+<p><b>Structural Health Monitoring (SHM)</b> uses sensors to detect/track damage. The process has <b>four functional levels</b>: (1) operational evaluation, (2) data acquisition & networking, (3) <b>feature extraction & data reduction</b> — turning raw sensor streams into a few <b>damage-sensitive features</b>, (4) statistical modelling for damage identification. (FE mesh optimisation is NOT one of them.) Rytter's damage hierarchy: detection → localization → quantification → prognosis.</p>
+<p><b>Digital Twin maturity:</b> <b>Digital Master</b> = high-fidelity physics model only. <b>Digital Shadow</b> = master + one-way flow of real monitored/operational data from the asset. <b>Digital Twin</b> = bidirectional — the model also feeds decisions/actions back to the physical system.</p>
+<div class="fig"><svg viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+<rect x="30" y="50" width="80" height="40" rx="6" fill="none" stroke="#6b7785" stroke-width="2"/>
+<text x="70" y="74" fill="#cdd6e0" font-size="10" text-anchor="middle">Master</text>
+<rect x="140" y="50" width="80" height="40" rx="6" fill="none" stroke="#4ea1ff" stroke-width="2"/>
+<text x="180" y="74" fill="#4ea1ff" font-size="10" text-anchor="middle">Shadow</text>
+<rect x="250" y="50" width="80" height="40" rx="6" fill="none" stroke="#3ecf8e" stroke-width="2"/>
+<text x="290" y="74" fill="#3ecf8e" font-size="10" text-anchor="middle">Twin</text>
+<path d="M110 70 L 136 70" stroke="#4ea1ff" stroke-width="1.5"/><polygon points="138,70 131,67 131,73" fill="#4ea1ff"/>
+<path d="M220 65 L 248 65" stroke="#3ecf8e" stroke-width="1.5"/>
+<path d="M248 78 L 220 78" stroke="#3ecf8e" stroke-width="1.5"/>
+<text x="180" y="44" fill="#9aa7b6" font-size="8" text-anchor="middle">+ real data in</text>
+<text x="290" y="44" fill="#9aa7b6" font-size="8" text-anchor="middle">two-way</text>
+</svg><div class="cap">Maturity ladder: model only → model + live data (shadow) → closed-loop two-way (true twin).</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>Wind-turbine blade:</b> strain/accel sensors stream data (level 2); FFT + statistics extract a few damage-sensitive features (level 3); a classifier flags a crack and the Digital Twin updates the remaining-life estimate and recommends a maintenance action (closed loop).</div>`},
+
+gauge:{t:"Strain-gauge rosettes",h:`
+<h2>Strain-gauge rosettes</h2>
+<div class="lead">Recovering the 2D strain state from three readings.</div>
+<h3>Theory</h3>
+<p>A single gauge measures normal strain along its own axis only. To get the full in-plane strain tensor (ε<sub>x</sub>, ε<sub>y</sub>, γ<sub>xy</sub>) you need <b>three</b> readings — a rosette. For the common <b>0°/45°/90°</b> rosette the two normal strains come directly and the shear is inferred from the 45° gauge. Principal strains/directions then follow from Mohr's circle.</p>
+<div class="formula"><span class="eq">ε<sub>α</sub> = ε<sub>x</sub>cos²α + ε<sub>y</sub>sin²α + γ<sub>xy</sub>sinα·cosα</span>
+<span class="eq">ε<sub>x</sub> = ε<sub>0</sub> ,  ε<sub>y</sub> = ε<sub>90</sub> ,  γ<sub>xy</sub> = 2ε<sub>45</sub> − ε<sub>0</sub> − ε<sub>90</sub></span>
+<span class="term">ε<sub>0</sub>, ε<sub>45</sub>, ε<sub>90</sub> = the three measured normal strains</span>
+<span class="term">γ<sub>xy</sub> cannot be measured directly — only inferred from the 45° gauge</span></div>
+<div class="fig"><svg viewBox="0 0 360 130" xmlns="http://www.w3.org/2000/svg">
+<circle cx="120" cy="70" r="6" fill="#6b7785"/>
+<line x1="120" y1="70" x2="120" y2="20" stroke="#4ea1ff" stroke-width="3"/><text x="120" y="16" fill="#4ea1ff" font-size="10" text-anchor="middle">90°</text>
+<line x1="120" y1="70" x2="185" y2="70" stroke="#4ea1ff" stroke-width="3"/><text x="195" y="74" fill="#4ea1ff" font-size="10">0°</text>
+<line x1="120" y1="70" x2="166" y2="24" stroke="#4ea1ff" stroke-width="3"/><text x="172" y="24" fill="#4ea1ff" font-size="10">45°</text>
+<text x="120" y="110" fill="#9aa7b6" font-size="10" text-anchor="middle">0/45/90 rosette</text>
+</svg><div class="cap">Three gauges at 0°, 45°, 90° resolve the full plane-strain tensor; convert to stresses with Hooke's law.</div></div>
+<h3>Worked example</h3>
+<div class="ex"><b>ε<sub>0</sub>=200, ε<sub>45</sub>=150, ε<sub>90</sub>=120 µε:</b> ε<sub>x</sub>=200, ε<sub>y</sub>=120, γ<sub>xy</sub> = 2·150 − 200 − 120 = −20 µε. Then σ<sub>x</sub> = E/(1−ν²)·(ε<sub>x</sub>+νε<sub>y</sub>) gives the stress.</div>`}
+
+};
+
+function openConcept(id){
+  const c=CONCEPTS[id]; if(!c) return;
+  $("modalBody").innerHTML=c.h;
+  $("modal").classList.remove("hide");
+  $("modal").scrollTop=0; document.body.style.overflow="hidden";
+}
+function closeConcept(){ $("modal").classList.add("hide"); document.body.style.overflow=""; }
+$("modalClose").onclick=closeConcept;
+$("modal").onclick=(e)=>{ if(e.target===$("modal")) closeConcept(); };
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("modal").classList.contains("hide")) closeConcept(); });
+
 function isCorrect(q,a){
   if(a.sel===null||a.sel===undefined) return false;
   if(q.multi){ const s=[...a.sel].sort().join(","), c=[...q.correct].sort().join(","); return s===c; }
@@ -894,6 +1431,7 @@ function renderReview(wrongOnly){
   const html=quizSet.map((q,i)=>{
     const a=answers[i], ok=isCorrect(q,a), blank=(a.sel===null||a.sel===undefined);
     if(wrongOnly && ok) return "";
+    const cid=conceptFor(q);
     const corr = q.multi?q.correct:[q.correct];
     const sel = q.multi?(a.sel||[]):(blank?[]:[a.sel]);
     const optsHtml=q.opts.map((o,j)=>{
@@ -911,9 +1449,11 @@ function renderReview(wrongOnly){
       <div class="exp"><div class="lab">Why</div>${q.exp}</div>
       <div class="exp theory"><div class="lab">Theory</div>${q.theory}</div>
       ${q.flag?`<div class="flagbox">⚠ ${q.flag}</div>`:``}
+      <button class="learnbtn" data-c="${cid}">📘 Learn more — ${CONCEPTS[cid].t}</button>
     </div>`;
   }).join("");
   $("review").innerHTML = html || `<div class="card" style="text-align:center" class="muted">No questions to show 🎉</div>`;
+  $("review").querySelectorAll(".learnbtn").forEach(b=>{ b.onclick=()=>openConcept(b.dataset.c); });
 }
 
 $("againBtn").onclick=()=>{ $("results").classList.add("hide"); $("home").classList.remove("hide"); initHome(); window.scrollTo(0,0); };
